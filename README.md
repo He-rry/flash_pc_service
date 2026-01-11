@@ -2,11 +2,19 @@
 
 A Laravel-based system for managing PC repair services with customer tracking and admin dashboard.
 
-## 🚀 Key Features
-* **Authentication:** Secure Admin Login using `AdminAuth` middleware.
-* **Service Tracking:** Real-time status bar (New, On Going, Processing, Finished).
-* **Admin Panel:** Full CRUD for Services, Statuses, and Service Types.
-* **Customer Portal:** Report issues with location (Lat/Long) and track via phone number.
+## ✨ Project Features
+
+| 📋 Customer Reporting | 🔍 Real-time Tracking |
+| :---: | :---: |
+| ![Report](./readme_ss/home.png) | ![Track](./readme_ss/track.png) |
+| ![Track](./readme_ss/report.png) |
+
+| Customer များ Report တင်ရန် | ဖုန်းနံပါတ်ဖြင့် အခြေအနေ စစ်ဆေးရန် |
+
+| ⚙️ Admin Panel | 📍 Location Mapping | 🔐Auth
+| :---: | :---: |
+| ![Admin](./readme_ss/auth.png) | ![Map](./readme_ss/admin.png) |
+| ဝန်ဆောင်မှုများကို စီမံရန် | Customer တည်နေရာကို မြေပုံဖြင့်ကြည့်ရန် |
 
 ## 🛠 Tech Stack
 * **Framework:** Laravel 11
