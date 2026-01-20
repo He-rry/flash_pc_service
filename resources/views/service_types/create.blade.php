@@ -9,7 +9,7 @@
                     <h5 class="mb-0">Add New Service Type</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('service-types.store') }}" method="POST">
+                    <form action="{{ route('admin.service-types.store') }}" method="POST">
                         @csrf
                         <div class="mb-3">
                             <label for="name" class="form-label">Service Type Name</label>
@@ -20,7 +20,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('service-types.index') }}" class="btn btn-light">Back</a>
+                            <a href="{{ route('admin.service-types.index') }}" class="btn btn-light">Back</a>
                             <button type="submit" class="btn btn-success">Save Service Type</button>
                         </div>
                     </form>

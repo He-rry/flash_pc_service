@@ -36,7 +36,7 @@ class ServiceController extends Controller
         ]);
 
         $this->repairService->createReport($validated);
-        return redirect()->route('services.index')->with('success', 'Service created successfully!');
+        return redirect()->route('admin.services.index')->with('success', 'Service created successfully!');
     }
 
     public function edit($id)
@@ -59,13 +59,13 @@ class ServiceController extends Controller
         ]);
 
         $this->repairService->updateRecord($id, $validated);
-        return redirect()->route('services.index')->with('success', 'Updated!');
+        return redirect()->route('admin.services.index')->with('success', 'Updated!');
     }
 
     public function destroy($id)
     {
         $this->repairService->deleteRecord($id);
-        return redirect()->route('services.index')->with('success', 'Deleted!');
+        return redirect()->route('admin.services.index')->with('success', 'Deleted!');
     }
 
     public function storeCustomerReport(Request $request)

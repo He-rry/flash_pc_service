@@ -15,7 +15,7 @@
         <h4>Edit Service Task</h4>
     </div>
     <div class="card-body">
-        <form action="{{ route('services.update', $service->id) }}" method="POST">
+        <form action="{{ route('admin.services.update', $service->id) }}" method="POST">
             @csrf
             @method('PUT') <div class="row">
                 <div class="col-md-6 mb-3">
@@ -49,7 +49,7 @@
                 </div>
             </div>
             <button type="submit" class="btn btn-primary">Update Service</button>
-            <a href="{{ route('services.index') }}" class="btn btn-light">Cancel</a>
+            <a href="{{ route('admin.services.index') }}" class="btn btn-light">Cancel</a>
         </form>
     </div>
 </div>

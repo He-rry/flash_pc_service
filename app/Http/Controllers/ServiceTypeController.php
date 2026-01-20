@@ -15,14 +15,14 @@ class ServiceTypeController extends Controller
 
     public function create()
     {
-        return view('service_types.create');
+        return view('admin.service_types.create');
     }
 
     public function store(Request $request)
     {
         $request->validate(['service_name' => 'required|unique:service_types,service_name']);
         \App\Models\ServiceType::create($request->only('service_name'));
-        return redirect()->route('service-types.index')->with('success', 'Service Type Created!');
+        return redirect()->route('admin.service-types.index')->with('success', 'Service Type Created!');
     }
 
     public function edit($id)
@@ -36,7 +36,7 @@ class ServiceTypeController extends Controller
         $request->validate(['service_name' => 'required']);
         $type = \App\Models\ServiceType::findOrFail($id);
         $type->update($request->only('service_name'));
-        return redirect()->route('service-types.index')->with('success', 'Service Type Updated!');
+        return redirect()->route('admin.service-types.index')->with('success', 'Service Type Updated!');
     }
 
     public function destroy($id)

@@ -40,7 +40,7 @@ class StatusController extends Controller
         $request->validate(['status_name' => 'required|max:50']);
         $status = \App\Models\Status::findOrFail($id);
         $status->update($request->all());
-        return redirect()->route('statuses.index')->with('success', 'Status updated!');
+        return redirect()->route('admin.statuses.index')->with('success', 'Status updated!');
     }
 
     public function destroy($id)

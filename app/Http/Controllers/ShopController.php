@@ -7,28 +7,22 @@ use App\Models\Shop;
 
 class ShopController extends Controller
 {
-    // Page ကို ပြသခြင်း
     public function create()
     {
-        return view('auth.routes.create');
+        return view('auth.maps.create'); // resources/views/admin/maps/create.blade.php
     }
 
-    // Database ထဲ သိမ်းဆည်းခြင်း
     public function store(Request $request)
     {
+        // ... validation logic ...
         $request->validate([
             'name' => 'required',
             'lat'  => 'required',
             'lng'  => 'required',
         ]);
+        Shop::create($request->all());
 
-        Shop::create([
-            'name' => $request->name,
-            'lat'  => $request->lat,
-            'lng'  => $request->lng,
-        ]);
-
-        // သိမ်းပြီးတာနဲ့ Route Planner ဆီ တန်းပို့မယ်
-        return redirect()->route('routes.index')->with('success', 'Shop added successfully!');
+        // သိမ်းပြီးရင် admin.maps.index ကို ပြန်သွားခိုင်းပါ
+        return redirect()->route('admin.maps.index')->with('success', 'Shop added!');
     }
 }

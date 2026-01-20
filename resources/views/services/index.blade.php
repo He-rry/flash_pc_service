@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>Service Records</h3>
-    <a href="{{route('services.create')}}" class="btn btn-primary">Add New Service</a>
+    <a href="{{route('admin.services.create')}}" class="btn btn-primary">Add New Service</a>
 </div>
 
 <div class="card shadow-sm">
@@ -40,8 +40,8 @@
                             data-bs-target="#viewModal{{ $service->id }}">
                             View Info
                         </button>
-                        <a href="{{ route('services.edit', $service->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                        <form action="{{ route('services.destroy', $service->id) }}" method="POST" style="display:inline-block;">
+                        <a href="{{ route('admin.services.edit', $service->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        <form action="{{ route('admin.services.destroy', $service->id) }}" method="POST" style="display:inline-block;">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this record?')">
@@ -99,7 +99,7 @@
                             </div>
                             <div class="modal-footer bg-light">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                <a href="{{ route('services.edit', $service->id) }}" class="btn btn-primary">Edit Service</a>
+                                <a href="{{ route('admin.services.edit', $service->id) }}" class="btn btn-primary">Edit Service</a>
                             </div>
                         </div>
                     </div>

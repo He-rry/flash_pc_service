@@ -9,7 +9,7 @@
                     <h5 class="mb-0">Edit Status</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('statuses.update', $status->id) }}" method="POST">
+                    <form action="{{ route('admin.statuses.update', $status->id) }}" method="POST">
                         @csrf
                         @method('PUT') <div class="mb-3">
                             <label for="name" class="form-label">Status Name</label>
@@ -26,7 +26,7 @@
                         </div>
                         
                         <div class="d-flex justify-content-between">
-                            <a href="{{ route('statuses.index') }}" class="btn btn-light">Cancel</a>
+                            <a href="{{ route('admin.statuses.index') }}" class="btn btn-light">Cancel</a>
                             <button type="submit" class="btn btn-primary">Update Status</button>
                         </div>
                     </form>

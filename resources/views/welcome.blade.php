@@ -20,7 +20,7 @@
         <footer class="mt-5 py-3 text-center">
             <p class="text-muted" style="font-size: 0.8rem;">
                 © 2026 PC Service Pro. All rights reserved.
-                <a href="{{ route('services.index') }}" class="text-decoration-none text-secondary ms-2" style="opacity: 0.5;">🔐</a>
+                <a href="{{ route('admin.services.index') }}" class="text-decoration-none text-secondary ms-2" style="opacity: 0.5;">🔐</a>
             </p>
         </footer>
         @endsection

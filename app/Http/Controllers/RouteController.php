@@ -22,7 +22,7 @@ class RouteController extends Controller
         $shops = Shop::all(['name', 'lat', 'lng']); // DB ကနေ ဆွဲထုတ်
         $routes = Route::latest()->get();
 
-        return view('auth.routes.index', compact('shops', 'routes'));
+        return view('auth.maps.index', compact('shops', 'routes'));
     }
     public function create(Request $request)
     {
@@ -38,17 +38,19 @@ class RouteController extends Controller
             'lng'  => $request->lng,
         ]);
 
-        return redirect()->route('routes.index')->with('success', 'Shop registered successfully!');
+        return redirect()->route('maps.index')->with('success', 'Shop registered successfully!');
     }
     public function store(Request $request)
     {
         $request->validate([
             'route_name' => 'required',
-            'waypoints' => 'required' // JSON string လာမှာဖြစ်ပါတယ်
+            'waypoints' => 'required'
         ]);
 
         $data = $request->all();
-        $data['waypoints'] = json_decode($request->waypoints, true);
+
+        // JSON String လာတာသေချာရင် decode လုပ်မယ်၊ မဟုတ်ရင် အတိုင်းထားမယ်
+        $data['waypoints'] = is_string($request->waypoints) ? json_decode($request->waypoints, true) : $request->waypoints;
 
         $this->routeRepo->store($data);
         return redirect()->back()->with('success', 'Route saved successfully!');
@@ -58,5 +60,18 @@ class RouteController extends Controller
     {
         $this->routeRepo->delete($id);
         return redirect()->back()->with('success', 'Route deleted!');
+    }
+    public function savedRoutes()
+    {
+        $routes = Route::latest()->get();
+        return view('auth.maps.saved_map_route', compact('routes'));
+    }
+
+    // ၂။ ရွေးချယ်လိုက်တဲ့ Route တစ်ခုကို Map ပေါ်မှာ အသေးစိတ်ကြည့်ရန်
+    public function showRoute($id)
+    {
+        $route = Route::findOrFail($id);
+        // သင့် folder structure က auth/maps/ ဖြစ်နေလို့ ဒါကို သုံးပါ
+        return view('auth.maps.show_route', compact('route'));
     }
 }

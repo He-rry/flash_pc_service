@@ -1,22 +1,10 @@
-@if(session('success'))
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    {{ session('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-@endif
-
-@if(session('error'))
-<div class="alert alert-danger alert-dismissible fade show" role="alert">
-    <strong>⚠️ မအောင်မြင်ပါ!</strong> {{ session('error') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-@endif
-@extends('layouts.app')
+@extends('layouts.app') {{-- ၁။ ဒါက အမြဲတမ်း ထိပ်ဆုံးမှာ ရှိရပါမယ် --}}
 
 @section('content')
 <div class="d-flex justify-content-between mb-3">
     <h4>Service Types Management</h4>
-    <a href="{{ route('service-types.create') }}" class="btn btn-primary">Add New Service Type</a>
+    {{-- ၂။ route နာမည်မှာ admin. ထည့်ပါ --}}
+    <a href="{{ route('admin.service-types.create') }}" class="btn btn-primary">Add New Service Type</a>
 </div>
 
 <div class="card">
@@ -33,9 +21,12 @@
                 <tr>
                     <td>{{ $type->service_name }}</td>
                     <td>
-                        <a href="{{ route('service-types.edit', $type->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
-                        <form action="{{ route('service-types.destroy', $type->id) }}" method="POST" class="d-inline">
-                            @csrf @method('DELETE')
+                        {{-- ၃။ route နာမည်တွေမှာ admin. လိုက်ထည့်ပါ --}}
+                        <a href="{{ route('admin.service-types.edit', $type->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
+                        
+                        <form action="{{ route('admin.service-types.destroy', $type->id) }}" method="POST" class="d-inline">
+                            @csrf 
+                            @method('DELETE')
                             <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
                         </form>
                     </td>

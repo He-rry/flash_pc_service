@@ -2,7 +2,6 @@
 
 @section('content')
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
 <style>
@@ -22,7 +21,6 @@
         align-items: center;
         justify-content: center;
         border: 2px solid white;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         cursor: pointer;
     }
 
@@ -37,7 +35,6 @@
         font-size: 11px;
         font-weight: bold;
         border: 2px solid white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
 
     .custom-div-icon {
@@ -75,7 +72,7 @@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 text-primary small font-weight-bold">SHOP-TO-SHOP ROUTE PLANNER</h5>
                     <div id="route-info-card" class="badge badge-light p-2 shadow-sm border">
-                        <span id="route-info" class="text-dark">Distance: 0 km</span>
+                        <span id="route-info" class="text-dark">Direct Distance: 0 km</span>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -88,12 +85,11 @@
             <div class="card shadow-sm border-0 mb-3">
                 <div class="card-body">
                     <h6 class="font-weight-bold mb-3 text-secondary small">SETTINGS</h6>
-                    <form action="{{ route('routes.store') }}" method="POST">
+                    <form action="{{ route('admin.maps.store') }}" method="POST">
                         @csrf
                         <input type="text" name="route_name" class="form-control mb-3" placeholder="Route Name" required>
                         <input type="hidden" name="waypoints" id="waypoints_input">
                         <input type="hidden" name="distance" id="distance_input">
-                        <input type="hidden" name="duration" id="duration_input">
                         <button type="submit" class="btn btn-primary w-100 mb-2">Save Route</button>
                         <button type="button" class="btn btn-outline-danger w-100" onclick="location.reload()">Reset Map</button>
                     </form>
@@ -102,7 +98,7 @@
             <div class="card shadow-sm border-0">
                 <div class="card-header bg-light small font-weight-bold">VISIT SEQUENCE</div>
                 <ul id="shop-list" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;">
-                    <li class="list-group-item text-muted">Select 2 or more shops to see route.</li>
+                    <li class="list-group-item text-muted">Select 2 or more shops.</li>
                 </ul>
             </div>
         </div>
@@ -110,16 +106,14 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-
 <script>
     var map = L.map('map').setView([16.8331, 96.1427], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
     var allShops = @json($shops);
-    var areaMarkers = []; // START/END points only
-    var routeWaypoints = []; // ONLY selected shops for routing
-    var routingControl = null;
+    var areaMarkers = [];
+    var routeWaypoints = [];
+    var currentPolyline = null;
     var startLatLng = null;
     var selectionRect = null;
 
@@ -165,7 +159,6 @@
                     className: 'custom-div-icon',
                     iconSize: [24, 24]
                 });
-
                 var sm = L.marker(shopPos, {
                     icon: shopIcon
                 }).addTo(map);
@@ -178,17 +171,34 @@
                     L.DomEvent.stopPropagation(ev);
                     if (!routeWaypoints.some(p => p.lat === shopPos.lat && p.lng === shopPos.lng)) {
                         routeWaypoints.push(shopPos);
-                        var orderNum = routeWaypoints.length;
-
-                        // Shop အတွက် Numbered Marker ချမယ်
-                        addNumberMarker(shopPos, orderNum, "#e74c3c");
+                        addNumberMarker(shopPos, routeWaypoints.length, "#e74c3c");
                         sm.setOpacity(0.2);
-                        updateSidebar(shop.name, orderNum);
-                        drawRoute(); // Route ဆွဲမယ်
+                        updateSidebar(shop.name, routeWaypoints.length);
+                        drawStraightRoute();
                     }
                 });
             }
         });
+    }
+
+    function drawStraightRoute() {
+        if (currentPolyline) map.removeLayer(currentPolyline);
+        if (routeWaypoints.length < 2) return;
+
+        currentPolyline = L.polyline(routeWaypoints, {
+            color: '#e74c3c',
+            weight: 6,
+            opacity: 0.8
+        }).addTo(map);
+
+        var totalDist = 0;
+        for (var i = 0; i < routeWaypoints.length - 1; i++) {
+            totalDist += routeWaypoints[i].distanceTo(routeWaypoints[i + 1]);
+        }
+        var distKm = (totalDist / 1000).toFixed(2);
+        document.getElementById('route-info').innerHTML = `Direct Distance: ${distKm} km`;
+        document.getElementById('distance_input').value = distKm + " km";
+        document.getElementById('waypoints_input').value = JSON.stringify(routeWaypoints);
     }
 
     function addAreaMarker(latlng, label, color) {
@@ -212,43 +222,10 @@
         }).addTo(map);
     }
 
-    function drawRoute() {
-        if (routingControl) map.removeControl(routingControl);
-
-        // ဆိုင် ၂ ဆိုင်နဲ့ အထက်ရှိမှ Shop-to-Shop ဆွဲမယ်
-        if (routeWaypoints.length < 2) return;
-
-        routingControl = L.Routing.control({
-            waypoints: routeWaypoints.map(p => L.latLng(p.lat, p.lng)),
-            show: false,
-            addWaypoints: false,
-            draggableWaypoints: false,
-            createMarker: function() {
-                return null;
-            }, // အပေါ်က Manual Marker တွေရှိလို့ hide ထားမယ်
-            lineOptions: {
-                styles: [{
-                    color: '#e74c3c',
-                    opacity: 0.7,
-                    weight: 6
-                }]
-            }
-        }).on('routesfound', function(e) {
-            var s = e.routes[0].summary;
-            var dist = (s.totalDistance / 1000).toFixed(2);
-            document.getElementById('route-info').innerHTML = `Route Distance: ${dist} km`;
-            document.getElementById('distance_input').value = dist + " km";
-            document.getElementById('waypoints_input').value = JSON.stringify(routeWaypoints);
-        }).addTo(map);
-    }
-
     function updateSidebar(name, order) {
         var list = document.getElementById('shop-list');
         if (order === 1) list.innerHTML = '';
-        list.innerHTML += `<li class="list-group-item d-flex justify-content-between">
-            <span>${order}. ${name}</span>
-            <i class="fas fa-store text-danger"></i>
-        </li>`;
+        list.innerHTML += `<li class="list-group-item d-flex justify-content-between"><span>${order}. ${name}</span></li>`;
     }
 </script>
 @endsection
