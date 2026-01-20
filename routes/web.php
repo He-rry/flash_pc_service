@@ -5,8 +5,24 @@ use App\Http\Controllers\StatusController;
 use App\Http\Controllers\ServiceTypeController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Middleware\AdminAuth;
+// routes/web.php ရဲ့ အပေါ်ဆုံးမှာ ဒါပါရပါမယ်
+use App\Http\Controllers\ShopController;
+use App\Http\Controllers\RouteController;
 
+// Admin Group ထဲမှာ သေချာထည့်ပါ
+Route::middleware(['AdminAuth'])->prefix('admin')->group(function () {
+
+    Route::get('/', [ServiceController::class, 'index'])->name('admin.dashboard');
+    Route::resource('services', ServiceController::class);
+    Route::resource('statuses', StatusController::class);
+    Route::resource('service-types', ServiceTypeController::class);
+
+    // Shops အတွက် Resource Route
+    // ဒါက admin.shops.index, admin.shops.create, admin.shops.store စတာတွေကို အလိုအလျောက် ဖန်တီးပေးပါတယ်
+    Route::resource('shops', ShopController::class);
+
+    Route::resource('routes', RouteController::class);
+});
 // --- Public Landing Page ---
 Route::get('/', function () {
     return view('welcome');
@@ -33,9 +49,15 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // --Admin Routes (Protected by AdminAuth Middleware) ---
 Route::middleware(['AdminAuth'])->prefix('admin')->group(function () {
+
     Route::get('/', [ServiceController::class, 'index'])->name('admin.dashboard');
-    // CRUD Resource Routes
     Route::resource('services', ServiceController::class);
     Route::resource('statuses', StatusController::class);
     Route::resource('service-types', ServiceTypeController::class);
 });
+Route::resource('routes', RouteController::class);
+// Route Planner (မြေပုံပေါ်မှာ လမ်းကြောင်းဆွဲတဲ့ Page)
+Route::get('/route-planner', [RouteController::class, 'index'])->name('routes.index');
+Route::post('/routes/store', [RouteController::class, 'store'])->name('routes.create');
+Route::resource('shops', ShopController::class);
+Route::resource('routes', RouteController::class);

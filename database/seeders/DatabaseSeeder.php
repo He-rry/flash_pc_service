@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(MasterDataSeeder::class);
         \App\Models\Service::factory(15)->create();
+        \App\Models\Shop::factory(50)->create();
 
         \App\Models\User::create([
             'name' => 'Admin User',

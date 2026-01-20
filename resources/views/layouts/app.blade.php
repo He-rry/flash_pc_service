@@ -32,6 +32,12 @@
                 <li class="nav-item">
                     <a class="nav-link" href="{{ route('service-types.index') }}">Service Types</a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('routes.index') }}" class="nav-link">
+                        <i class="fas fa-map-marked-alt"></i>
+                        <p>Route Management</p>
+                    </a>
+                </li>
             </ul>
         </div>
         <ul class="navbar-nav ms-auto">
@@ -57,6 +63,14 @@
     </nav>
     <div class="container">
         @yield('content')
+    </div>
+    <div class="card shadow-sm border-0 mb-3">
+        <div class="card-body">
+            <h6 class="font-weight-bold mb-3 text-secondary small">SHOP MANAGEMENT</h6>
+            <a href="{{ view('auth.routes.create') }}" class="btn btn-success w-100 shadow-sm">
+                <i class="fas fa-plus-circle"></i> Add New Shop
+            </a>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
