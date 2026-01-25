@@ -8,6 +8,10 @@ class RouteRepository implements RouterInterface
     {
         return \App\Models\Route::all();
     }
+    public function find($id)
+    {
+        return \App\Models\Route::find($id);
+    }
     public function store(array $data)
     {
         return \App\Models\Route::create($data);

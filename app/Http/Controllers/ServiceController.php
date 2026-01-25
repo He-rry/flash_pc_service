@@ -1,48 +1,42 @@
 <?php
-
 namespace App\Http\Controllers;
-
-use App\Services\RepairBusinessService;
+use App\Services\ServiceService;
+use App\Http\Requests\StoreServiceRequest;
+use App\Http\Requests\UpdateServiceRequest;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
 {
-    protected $repairService;
+    protected $service;
 
-    public function __construct(RepairBusinessService $repairService)
+    public function __construct(ServiceService $service)
     {
-        $this->repairService = $repairService;
+        $this->service = $service;
     }
 
     public function index()
     {
-        $services = $this->repairService->getServiceList();
+        $services = $this->service->getServiceList();
         return view('services.index', compact('services'));
     }
 
     public function create()
     {
-        $data = $this->repairService->getInitialData();
+        $data = $this->service->getInitialData();
         return view('services.create', ['types' => $data['types']]);
     }
 
-    public function store(Request $request)
+    public function store(StoreServiceRequest $request)
     {
-        $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'customer_phone' => 'required|string|min:7|max:20',
-            'customer_address' => 'required|string',
-            'service_type_id' => 'required|exists:service_types,id',
-        ]);
-
-        $this->repairService->createReport($validated);
+        $this->service->createReport($request->validated());
         return redirect()->route('admin.services.index')->with('success', 'Service created successfully!');
     }
 
     public function edit($id)
     {
-        $service = \App\Models\Service::findOrFail($id);
-        $data = $this->repairService->getInitialData();
+        $service = $this->service->find($id);
+        $data = $this->service->getInitialData();
+
         return view('services.edit', [
             'service' => $service,
             'statuses' => $data['statuses'],
@@ -50,42 +44,32 @@ class ServiceController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateServiceRequest $request, $id)
     {
-        $validated = $request->validate([
-            'customer_name' => 'required|string|max:255',
-            'status_id' => 'required|exists:statuses,id',
-            'service_type_id' => 'required|exists:service_types,id',
-        ]);
-
-        $this->repairService->updateRecord($id, $validated);
+        $this->service->updateRecord($id, $request->validated());
         return redirect()->route('admin.services.index')->with('success', 'Updated!');
     }
 
     public function destroy($id)
     {
-        $this->repairService->deleteRecord($id);
+        $this->service->deleteRecord($id);
         return redirect()->route('admin.services.index')->with('success', 'Deleted!');
     }
 
-    public function storeCustomerReport(Request $request)
+    public function storeCustomerReport(StoreServiceRequest $request)
     {
-        $validated = $request->validate([
-            'customer_name' => 'required|string',
-            'customer_phone' => 'required',
-            'customer_address' => 'required',
-            'service_type_id' => 'required',
-            'lat' => 'required|numeric',
-            'long' => 'required|numeric',
-        ]);
-
-        $this->repairService->createReport($validated);
+        $this->service->createReport($request->validated());
         return redirect()->back()->with('success', 'လက်ခံရရှိပါပြီ။');
     }
 
     public function track(Request $request)
     {
-        $service = $request->filled('phone') ? $this->repairService->getTrackInfo($request->phone) : null;
+        if (! $request->filled('phone')) {
+            return view('customers.track')->with('service');
+        }
+
+        $service = $this->service->getTrackInfo($request->phone);
+
         return view('customers.track', compact('service'));
     }
-};
+}

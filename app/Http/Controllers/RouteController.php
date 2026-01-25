@@ -1,77 +1,66 @@
 <?php
 
 namespace App\Http\Controllers;
-
-use App\Interfaces\RouterInterface;
-use Illuminate\Http\Request;
-
-use App\Models\Shop;
-use App\Models\Route;
+use App\Services\RouteService;
+use App\Http\Requests\StoreShopRequest;
+use App\Http\Requests\StoreRouteRequest;
+use App\Services\ShopService;
 
 class RouteController extends Controller
 {
-    protected $routeRepo;
+    protected RouteService $routeService;
+    protected ShopService $shopService;
 
-    public function __construct(RouterInterface $routeRepo)
+    public function __construct(RouteService $routeService, ShopService $shopService)
     {
-        $this->routeRepo = $routeRepo;
+        $this->routeService = $routeService;
+        $this->shopService = $shopService;
     }
 
     public function index()
     {
-        $shops = Shop::all(['name', 'lat', 'lng']); // DB ကနေ ဆွဲထုတ်
-        $routes = Route::latest()->get();
+        $shops = $this->shopService->list();
+        $routes = $this->routeService->list();
 
         return view('auth.maps.index', compact('shops', 'routes'));
     }
-    public function create(Request $request)
+    public function create(StoreShopRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'lat'  => 'required',
-            'lng'  => 'required',
-        ]);
-
-        Shop::create([
-            'name' => $request->name,
-            'lat'  => $request->lat,
-            'lng'  => $request->lng,
-        ]);
+        $this->shopService->create($request->validated());
 
         return redirect()->route('maps.index')->with('success', 'Shop registered successfully!');
     }
-    public function store(Request $request)
+    public function store(StoreRouteRequest $request)
     {
-        $request->validate([
-            'route_name' => 'required',
-            'waypoints' => 'required'
-        ]);
+        $data = $request->validated();
 
-        $data = $request->all();
+        $this->routeService->create($data + ['waypoints' => $request->waypoints]);
 
-        // JSON String လာတာသေချာရင် decode လုပ်မယ်၊ မဟုတ်ရင် အတိုင်းထားမယ်
-        $data['waypoints'] = is_string($request->waypoints) ? json_decode($request->waypoints, true) : $request->waypoints;
-
-        $this->routeRepo->store($data);
         return redirect()->back()->with('success', 'Route saved successfully!');
     }
 
     public function destroy($id)
     {
-        $this->routeRepo->delete($id);
+        $this->routeService->delete($id);
+
         return redirect()->back()->with('success', 'Route deleted!');
     }
     public function savedRoutes()
     {
-        $routes = Route::latest()->get();
+        $routes = $this->routeService->list();
+
         return view('auth.maps.saved_map_route', compact('routes'));
     }
 
     // ၂။ ရွေးချယ်လိုက်တဲ့ Route တစ်ခုကို Map ပေါ်မှာ အသေးစိတ်ကြည့်ရန်
     public function showRoute($id)
     {
-        $route = Route::findOrFail($id);
-        // သင့် folder structure က auth/maps/ ဖြစ်နေလို့ ဒါကို သုံးပါ
+        $route = $this->routeService->find($id);
+
+        if (! $route) {
+            abort(404);
+        }
+
         return view('auth.maps.show_route', compact('route'));
     }
 }

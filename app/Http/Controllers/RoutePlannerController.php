@@ -2,15 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Shop;
-use App\Models\Route; // သိမ်းထားတဲ့ route တွေရှိရင်
+use App\Services\RoutePlannerService;
 
 class RoutePlannerController extends Controller
 {
+    protected $service;
+
+    public function __construct(RoutePlannerService $service)
+    {
+        $this->service = $service;
+    }
+
     public function index()
     {
-        $shops = Shop::all(); // Database ထဲက ဆိုင်အားလုံးယူမယ်
-        $routes = Route::all();
+        $data = $this->service->list();
+        $shops = $data['shops']; // Database ထဲက ဆိုင်အားလုံးယူမယ်
+        $routes = $data['routes'];
 
         return view('auth.index', compact('shops', 'routes'));
     }

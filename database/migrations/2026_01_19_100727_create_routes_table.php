@@ -13,10 +13,11 @@ return new class extends Migration
     {
         Schema::create('routes', function (Blueprint $table) {
             $table->id();
-            $table->string('route_name'); // ဒီစာကြောင်း ရှိရပါမယ်
+            $table->string('route_name'); 
             $table->json('waypoints');
             $table->string('distance')->nullable();
             $table->string('duration')->nullable();
+            
             $table->timestamps();
         });
     }

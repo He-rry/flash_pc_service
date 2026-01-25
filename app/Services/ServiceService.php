@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Interfaces\ServiceInterface;
 use App\Models\Status;
 
-class RepairBusinessService
+class ServiceService
 {
     protected $serviceRepo;
 
@@ -14,7 +14,6 @@ class RepairBusinessService
         $this->serviceRepo = $serviceRepo;
     }
 
-    // Status "New" ကို ရှာပေးတဲ့ Logic
     private function getDefaultStatus()
     {
         return Status::where('status_name', 'New')->first() ?? Status::where('name', 'New')->first() ?? Status::first();
@@ -27,11 +26,16 @@ class RepairBusinessService
         return $this->serviceRepo->storeService($data);
     }
 
-    // အခြား လိုအပ်တဲ့ Logic တွေကို Repo ဆီ တိုက်ရိုက်လှမ်းခေါ်မယ်
     public function getServiceList()
     {
         return $this->serviceRepo->getAllServices();
     }
+
+    public function find($id)
+    {
+        return $this->serviceRepo->findById($id);
+    }
+
     public function getInitialData()
     {
         return [
@@ -39,14 +43,17 @@ class RepairBusinessService
             'statuses' => $this->serviceRepo->getAllStatuses(),
         ];
     }
+
     public function getTrackInfo($phone)
     {
         return $this->serviceRepo->findByPhone($phone);
     }
+
     public function updateRecord($id, $data)
     {
         return $this->serviceRepo->updateService($id, $data);
     }
+
     public function deleteRecord($id)
     {
         return $this->serviceRepo->deleteService($id);

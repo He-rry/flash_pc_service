@@ -5,10 +5,16 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 
 <style>
+    .map-centered-container {
+        max-width: 80%;
+        margin: 0 auto;
+    }
+
     #map {
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         background: #f8f9fa;
+        height: 400px !important;
     }
 
     .tower-icon {
@@ -67,39 +73,41 @@
 
 <div class="container-fluid py-4">
     <div class="row">
-        <div class="col-md-9">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0 text-primary small font-weight-bold">SHOP-TO-SHOP ROUTE PLANNER</h5>
-                    <div id="route-info-card" class="badge badge-light p-2 shadow-sm border">
-                        <span id="route-info" class="text-dark">Direct Distance: 0 km</span>
+        <div class="container-fluid py-4">
+            <div class="row justify-content-center">
+                <div class="col-12">
+                    <div class="map-centered-container">
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0 text-primary font-weight-bold">ROUTE PLANNER</h6>
+                                <span id="route-info" class="badge badge-info p-2">0 km</span>
+                            </div>
+                        </div>
+                        <div id="map"></div>
+                        <div class="row mt-3 gx-2">
+                            <div class="col-md-6">
+                                <div class="card shadow-sm border-0 p-3 h-100">
+                                    <form action="{{ route('admin.maps.store') }}" method="POST">
+                                        @csrf
+                                        <input type="text" name="route_name" class="form-control form-control-sm mb-2" placeholder="Route Name" required>
+                                        <input type="hidden" name="waypoints" id="waypoints_input">
+                                        <input type="hidden" name="distance" id="distance_input">
+                                        <button type="submit" class="btn btn-primary btn-sm w-100 mb-2">Save Route</button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="location.reload()">Reset</button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card shadow-sm border-0 h-100">
+                                    <div class="card-header bg-light py-1 small font-weight-bold">VISIT SEQUENCE</div>
+                                    <ul id="shop-list" class="list-group list-group-flush small" style="max-height: 120px; overflow-y: auto;">
+                                        <li class="list-group-item text-muted p-2">Select shops...</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="card-body p-0">
-                    <div id="map" style="height: 650px; width: 100%;"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-3">
-            <div class="card shadow-sm border-0 mb-3">
-                <div class="card-body">
-                    <h6 class="font-weight-bold mb-3 text-secondary small">SETTINGS</h6>
-                    <form action="{{ route('admin.maps.store') }}" method="POST">
-                        @csrf
-                        <input type="text" name="route_name" class="form-control mb-3" placeholder="Route Name" required>
-                        <input type="hidden" name="waypoints" id="waypoints_input">
-                        <input type="hidden" name="distance" id="distance_input">
-                        <button type="submit" class="btn btn-primary w-100 mb-2">Save Route</button>
-                        <button type="button" class="btn btn-outline-danger w-100" onclick="location.reload()">Reset Map</button>
-                    </form>
-                </div>
-            </div>
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-light small font-weight-bold">VISIT SEQUENCE</div>
-                <ul id="shop-list" class="list-group list-group-flush small" style="max-height: 250px; overflow-y: auto;">
-                    <li class="list-group-item text-muted">Select 2 or more shops.</li>
-                </ul>
             </div>
         </div>
     </div>
@@ -109,8 +117,7 @@
 <script>
     var map = L.map('map').setView([16.8331, 96.1427], 14);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-    var allShops = @json($shops);
+    var allShops = [];
     var areaMarkers = [];
     var routeWaypoints = [];
     var currentPolyline = null;
@@ -151,17 +158,21 @@
 
     function filterShopsInArea(start, end) {
         var bounds = L.latLngBounds(start, end);
-        allShops.forEach(shop => {
+        allShops.forEach(function(shop) {
             var shopPos = L.latLng(parseFloat(shop.lat), parseFloat(shop.lng));
+
+            // Area (Bounds) 
             if (bounds.contains(shopPos)) {
                 var shopIcon = L.divIcon({
                     html: `<div class="tower-icon pulse"><i class="fas fa-broadcast-tower" style="font-size:10px;"></i></div>`,
                     className: 'custom-div-icon',
                     iconSize: [24, 24]
                 });
+
                 var sm = L.marker(shopPos, {
                     icon: shopIcon
                 }).addTo(map);
+
                 sm.bindTooltip(shop.name, {
                     direction: 'top',
                     className: 'leaflet-tooltip-shop'
@@ -227,5 +238,16 @@
         if (order === 1) list.innerHTML = '';
         list.innerHTML += `<li class="list-group-item d-flex justify-content-between"><span>${order}. ${name}</span></li>`;
     }
+
+    function loadShops() {
+        fetch("{{ route('shops.index') }}")
+            .then(response => response.json())
+            .then(payload => {
+                allShops = payload.all_filtered || payload.data || [];
+                console.log("Shops loaded:", allShops.length);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+    loadShops();
 </script>
 @endsection

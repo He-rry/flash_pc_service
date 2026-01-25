@@ -1,9 +1,8 @@
-@extends('layouts.app') {{-- ၁။ ဒါက အမြဲတမ်း ထိပ်ဆုံးမှာ ရှိရပါမယ် --}}
+@extends('layouts.app')
 
 @section('content')
 <div class="d-flex justify-content-between mb-3">
     <h4>Service Types Management</h4>
-    {{-- ၂။ route နာမည်မှာ admin. ထည့်ပါ --}}
     <a href="{{ route('admin.service-types.create') }}" class="btn btn-primary">Add New Service Type</a>
 </div>
 
@@ -21,9 +20,7 @@
                 <tr>
                     <td>{{ $type->service_name }}</td>
                     <td>
-                        {{-- ၃။ route နာမည်တွေမှာ admin. လိုက်ထည့်ပါ --}}
                         <a href="{{ route('admin.service-types.edit', $type->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
-                        
                         <form action="{{ route('admin.service-types.destroy', $type->id) }}" method="POST" class="d-inline">
                             @csrf 
                             @method('DELETE')

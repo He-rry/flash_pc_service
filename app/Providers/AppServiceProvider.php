@@ -9,15 +9,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function register(): void
     {
-        $this->app->bind(
-            \App\Interfaces\ServiceInterface::class,
-            \App\Repositories\ServiceRepository::class
-        );
-        $this->app->bind(
-            \App\Interfaces\RouterInterface::class,
-            \App\Repositories\RouteRepository::class
-        );
-        
+        // Register repository bindings in a dedicated provider
+        $this->app->register(\App\Providers\RepositoryServiceProvider::class);
     }
 
     public function boot(): void

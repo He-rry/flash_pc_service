@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Models\Shop;
+use Illuminate\Http\Request;
+
+class ShopController extends Controller
+{
+    public function index(Request $request)
+    {
+        $query = Shop::applyFilters($request->all())->latest();
+
+        $allFiltered = (clone $query)->get(); // Map အတွက်
+        $paginated = $query->paginate(10); // Table အတွက်
+
+        return response()->json(array_merge(
+            $paginated->toArray(),
+            ['all_filtered' => $allFiltered]
+        ));
+    }
+}

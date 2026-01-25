@@ -48,6 +48,7 @@
         // JS သို့ data ပို့ခြင်း
         var waypoints = @json($wpData);
         var pathPoints = [];
+        var markers = []; // store { marker, name, region }
 
         // Waypoints ရှိမရှိ နှင့် valid ဖြစ်မဖြစ် စစ်ဆေးခြင်း
         if (waypoints && Array.isArray(waypoints) && waypoints.length > 0) {
@@ -59,13 +60,18 @@
                     var latlng = [lat, lng];
                     pathPoints.push(latlng);
 
-                    // Marker ထည့်ခြင်း
-                    L.marker(latlng).addTo(map)
-                        .bindTooltip("Stop " + (index + 1), { 
-                            permanent: true, 
-                            direction: 'top',
-                            className: 'custom-tooltip'
-                        });
+                    // Marker ထည့်ခြင်း (store metadata)
+                    var marker = L.marker(latlng).bindTooltip("Stop " + (index + 1), {
+                        permanent: true,
+                        direction: 'top',
+                        className: 'custom-tooltip'
+                    });
+
+                    var name = (point.name !== undefined && point.name !== null) ? String(point.name) : '';
+                    var region = (point.region !== undefined && point.region !== null) ? String(point.region) : '';
+
+                    markers.push({ marker: marker, name: name, region: region });
+                    marker.addTo(map);
                 } else {
                     console.warn('Invalid waypoint at index ' + index, point);
                 }
@@ -85,6 +91,33 @@
                 // Stop တစ်ခုပဲ ရှိရင် အဲ့ဒီနေရာကို zoom လုပ်
                 map.setView(pathPoints[0], 15);
             }
+
+            // Filtering logic: listens to #mapSearch input and #regionFilter change
+            var searchInput = document.getElementById('mapSearch');
+            var regionSelect = document.getElementById('regionFilter');
+
+            function filterMarkers() {
+                var q = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                var region = regionSelect ? regionSelect.value : 'all';
+
+                markers.forEach(function(obj) {
+                    var matchesName = q === '' || (obj.name && obj.name.toLowerCase().includes(q));
+                    var matchesRegion = (region === 'all') || (obj.region && obj.region === region);
+                    var shouldShow = matchesName && matchesRegion;
+
+                    if (shouldShow) {
+                        if (!map.hasLayer(obj.marker)) obj.marker.addTo(map);
+                    } else {
+                        if (map.hasLayer(obj.marker)) map.removeLayer(obj.marker);
+                    }
+                });
+            }
+
+            if (searchInput) searchInput.addEventListener('input', filterMarkers);
+            if (regionSelect) regionSelect.addEventListener('change', filterMarkers);
+
+            // initial filter pass
+            filterMarkers();
         } else {
             // Waypoints မရှိရင် default location ပြခြင်း
             console.warn('No valid waypoints found');

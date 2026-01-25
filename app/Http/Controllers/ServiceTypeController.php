@@ -3,13 +3,21 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
+use App\Services\ServiceTypeService;
 
 class ServiceTypeController extends Controller
 {
+    protected $service;
+
+    public function __construct(ServiceTypeService $service)
+    {
+        $this->service = $service;
+    }
 
     public function index()
     {
-        $types = \App\Models\ServiceType::all();
+        $types = $this->service->list();
         return view('service_types.index', compact('types'));
     }
 
@@ -20,34 +28,46 @@ class ServiceTypeController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate(['service_name' => 'required|unique:service_types,service_name']);
-        \App\Models\ServiceType::create($request->only('service_name'));
+        $validated = $this->validateServiceType($request);
+
+        $this->service->create($validated);
+
         return redirect()->route('admin.service-types.index')->with('success', 'Service Type Created!');
     }
 
     public function edit($id)
     {
-        $type = \App\Models\ServiceType::findOrFail($id);
+        $type = $this->service->find($id);
         return view('service_types.edit', compact('type'));
     }
 
     public function update(Request $request, $id)
     {
-        $request->validate(['service_name' => 'required']);
-        $type = \App\Models\ServiceType::findOrFail($id);
-        $type->update($request->only('service_name'));
+        $validated = $this->validateServiceType($request, true);
+
+        $this->service->update($id, $validated);
+
         return redirect()->route('admin.service-types.index')->with('success', 'Service Type Updated!');
+    }
+
+    private function validateServiceType(Request $request, $isUpdate = false)
+    {
+        $rules = ['service_name' => 'required'];
+
+        if (! $isUpdate) {
+            $rules['service_name'] = 'required|unique:service_types,service_name';
+        }
+
+        return $request->validate($rules);
     }
 
     public function destroy($id)
     {
-
         try {
-            $item = \App\Models\ServiceType::findOrFail($id);
-            $item->delete();
+            $this->service->delete($id);
 
             return redirect()->back()->with('success', 'Deleted successfully!');
-        } catch (\Illuminate\Database\QueryException $e) {
+        } catch (QueryException $e) {
             return redirect()->back()->with('error', 'ဖျက်လို့မရပါဘူး။ ဒီ Service Type ကို အသုံးပြုထားတဲ့ Service records တွေ ရှိနေပါသေးတယ်။');
         }
     }

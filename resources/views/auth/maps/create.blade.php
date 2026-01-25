@@ -1,175 +1,181 @@
 @extends('layouts.app')
 
-@push('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>
-    #map {
-        height: 400px;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-        cursor: crosshair;
-    }
-
-    .gap-2 {
-        gap: 0.5rem;
-    }
-
-    .flex-grow-1 {
-        flex-grow: 1;
-    }
-</style>
-@endpush
-
 @section('content')
-<div class="container py-4">
-    <div class="card shadow border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="fas fa-map-marker-alt mr-2"></i> Add New Shop Location</h5>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<link rel="stylesheet" href="{{ asset('css/shop-map.css') }}">
+
+<div class="dashboard-container">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="custom-card p-4">
+                <h6 class="section-title mb-3"><i class="fas fa-plus-circle mr-2"></i>Register & Import Shops</h6>
+
+                @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show small py-2 shadow-sm" role="alert">
+                    <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                </div>
+                @endif
+                <form action="{{ route('admin.shops.store') }}" method="POST" class="mb-4">
+                    @csrf
+                    <div class="row align-items-start">
+                        <div class="col-md-4 px-1 mb-2">
+                            <label class="small font-weight-bold text-muted ml-1 uppercase">Shop Name</label>
+                            <input type="text" name="name" value="{{ old('name') }}"
+                                class="form-control form-control-sm @error('name') is-invalid @enderror"
+                                placeholder="Enter name">
+                            @error('name')
+                            <div class="invalid-feedback font-weight-bold" style="font-size: 11px;">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-2 px-1 mb-2">
+                            <label class="small font-weight-bold text-muted ml-1 uppercase">Latitude</label>
+                            <input type="number" step="any" name="lat" id="form_lat" value="{{ old('lat') }}"
+                                class="form-control form-control-sm @error('lat') is-invalid @enderror"
+                                placeholder="16.8...">
+                            @error('lat')
+                            <div class="invalid-feedback font-weight-bold" style="font-size: 11px;">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-2 px-1 mb-2">
+                            <label class="small font-weight-bold text-muted ml-1 uppercase">Longitude</label>
+                            <input type="number" step="any" name="lng" id="form_lng" value="{{ old('lng') }}"
+                                class="form-control form-control-sm @error('lng') is-invalid @enderror"
+                                placeholder="96.1...">
+                            @error('lng')
+                            <div class="invalid-feedback font-weight-bold" style="font-size: 11px;">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-2 px-1 mb-2">
+                            <label class="small font-weight-bold text-muted ml-1 uppercase">Region</label>
+                            <input type="text" name="region" value="{{ old('region') }}"
+                                class="form-control form-control-sm" placeholder="Region">
+                        </div>
+
+                        <div class="col-md-2 px-1 mt-4">
+                            <button type="submit" class="btn btn-primary btn-sm btn-block font-weight-bold shadow-sm py-2">
+                                <i class="fas fa-plus mr-1"></i> ADD
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <form action="{{ route('admin.shops.import') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="row align-items-center">
+                        <div class="col-md-7 px-1">
+                            <div class="custom-file">
+                                <input type="file" name="file" class="custom-file-input" id="importFile" required>
+                                <label class="custom-file-label custom-file-label-sm small" for="importFile">Choose Excel/CSV</label>
+                            </div>
+                        </div>
+                        <div class="col-md-2 px-1">
+                            <button type="submit" class="btn btn-dark btn-sm btn-block font-weight-bold shadow-sm">
+                                <i class="fas fa-upload mr-1"></i> IMPORT
+                            </button>
+                        </div>
+                        <div class="col-md-3 px-1">
+                            <a href="{{ route('admin.shops.export') }}" id="exportBtn" class="btn btn-success btn-sm btn-block font-weight-bold shadow-sm">
+                                <i class="fas fa-file-excel mr-1"></i> EXPORT RESULT
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
-        <div class="card-body">
-            <form action="{{ route('admin.shops.store') }}" method="POST" id="shopForm">
-                @csrf
-                <div class="form-group mb-3">
-                    <label>Select Location <span class="text-danger">*</span></label>
-                    <p class="text-muted small mb-2"><i class="fas fa-info-circle"></i> Click on the map or drag the marker</p>
-                    <div id="map"></div>
-                </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label>Latitude</label>
-                        <input type="text" name="lat" id="lat" class="form-control @error('lat') is-invalid @enderror" value="{{ old('lat') }}" readonly required>
-                        @error('lat')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
+        <div class="col-lg-4">
+            <div class="custom-card p-4 h-100">
+                <h6 class="section-title mb-3"><i class="fas fa-filter mr-2"></i>Data Filters</h6>
+                <form id="filterForm" onsubmit="return false;">
+                    <div class="mb-3">
+                        <input type="text" id="mapSearch" class="form-control form-control-sm mb-2" placeholder="Search by shop name...">
+                        <select id="regionFilter" class="form-control form-control-sm">
+                            <option value="">All Regions</option>
+                            @foreach($regions as $reg)
+                            <option value="{{ $reg }}">{{ $reg }}</option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="col-md-6">
-                        <label>Longitude</label>
-                        <input type="text" name="lng" id="lng" class="form-control @error('lng') is-invalid @enderror" value="{{ old('lng') }}" readonly required>
-                        @error('lng')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-                <div class="form-group mb-3">
-                    <label for="shopName">Shop Name <span class="text-danger">*</span></label>
-                    <input type="text" name="name" id="shopName" class="form-control @error('name') is-invalid @enderror"
-                        placeholder="Enter shop name" value="{{ old('name') }}" required>
-                    @error('name')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
 
-                <div class="d-flex gap-2 w-25">
-                    <button type="submit" class="btn btn-primary flex-grow-1">
-                        <i class="fas fa-save mr-1"></i> Save Shop Location
-                    </button>
-                    <a href="{{ route('admin.maps.index') }}" class="btn btn-outline-secondary">Cancel</a>
-                </div>
-            </form>
+                    <label class="small font-weight-bold text-muted mb-2 d-block">TIME PERIOD</label>
+                    <div class="btn-group btn-group-toggle d-flex" data-toggle="buttons">
+                        <label class="btn btn-outline-primary btn-sm active flex-fill">
+                            <input type="radio" name="period" value="all" checked> All
+                        </label>
+                        <label class="btn btn-outline-primary btn-sm flex-fill">
+                            <input type="radio" name="period" value="3"> 3M
+                        </label>
+                        <label class="btn btn-outline-primary btn-sm flex-fill">
+                            <input type="radio" name="period" value="6"> 6M
+                        </label>
+                        <label class="btn btn-outline-primary btn-sm flex-fill">
+                            <input type="radio" name="period" value="12"> 1Y
+                        </label>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="custom-card p-3 shadow-sm mt-3">
+        <div id="map" style="height: 400px; border-radius: 8px;"></div>
+    </div>
+
+    <div class="custom-card overflow-hidden shadow-sm mt-3">
+        <div class="card-header bg-white py-3">
+            <h6 class="section-title mb-0"><i class="fas fa-store mr-2"></i>Shop Directory</h6>
+        </div>
+        <div class="table-container">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="pl-4">Shop Name</th>
+                        <th>Coordinates</th>
+                        <th class="text-center">Region</th>
+                        <th class="text-right pr-4">Registered At</th>
+                    </tr>
+                </thead>
+                <tbody id="shopTableBody">
+                    @foreach($shops as $shop)
+                    <tr>
+                        <td class="pl-4"><strong>{{ $shop->name }}</strong></td>
+                        <td>{{ number_format($shop->lat, 5) }}, {{ number_format($shop->lng, 5) }}</td>
+                        <td class="text-center"><span class="badge badge-light border">{{ $shop->region }}</span></td>
+                        <td class="text-right pr-4 small text-muted">{{ $shop->created_at->format('d/m/Y') }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+        <div id="paginationContainer" class="card-footer bg-light py-3 d-flex justify-content-center">
+            {{ $shops->links('pagination::bootstrap-4') }}
         </div>
     </div>
 </div>
-<div class="container">
-    @if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+@include('auth.maps.partials.import_modal')
 
-    @yield('content')
-</div>
-@endsection
-
-@push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Yangon ကို ဗဟိုပြုထားပါတယ်
-        var defaultLat = 16.8331;
-        var defaultLng = 96.1427;
-
-        var map = L.map('map').setView([defaultLat, defaultLng], 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(map);
-
-        var currentMarker = null;
-
-        function updateMarker(lat, lng) {
-            // Validate coordinates
-            if (isNaN(lat) || isNaN(lng)) {
-                console.error('Invalid coordinates:', lat, lng);
-                return;
-            }
-
-            // Remove old marker
-            if (currentMarker) {
-                map.removeLayer(currentMarker);
-            }
-
-            // Add new marker
-            currentMarker = L.marker([lat, lng], {
-                draggable: true,
-                title: 'Drag to adjust position'
-            }).addTo(map);
-
-            // Update input values
-            document.getElementById('lat').value = parseFloat(lat).toFixed(7);
-            document.getElementById('lng').value = parseFloat(lng).toFixed(7);
-
-            // Add tooltip
-            currentMarker.bindTooltip('Shop Location', {
-                permanent: false,
-                direction: 'top'
-            });
-
-            // Handle drag event
-            currentMarker.on('dragend', function(e) {
-                var pos = e.target.getLatLng();
-                document.getElementById('lat').value = pos.lat.toFixed(7);
-                document.getElementById('lng').value = pos.lng.toFixed(7);
-            });
-        }
-
-        // Map click event
-        map.on('click', function(e) {
-            updateMarker(e.latlng.lat, e.latlng.lng);
-        });
-
-        // Form validation
-        document.getElementById('shopForm').addEventListener('submit', function(e) {
-            var lat = document.getElementById('lat').value;
-            var lng = document.getElementById('lng').value;
-
-            if (!lat || !lng) {
-                e.preventDefault();
-                alert('Please select a location on the map before saving.');
-                return false;
-            }
-
-            if (isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
-                e.preventDefault();
-                alert('Invalid location coordinates. Please select a valid location.');
-                return false;
-            }
-        });
-
-        // Validation error ပြန်တက်လာရင် တည်နေရာဟောင်းကို ပြန်ပြမယ်
-        @if(old('lat') && old('lng'))
-        try {
-            var oldLat = parseFloat('{{ old('
-                lat ') }}');
-            var oldLng = parseFloat('{{ old('
-                lng ') }}');
-
-            if (!isNaN(oldLat) && !isNaN(oldLng)) {
-                updateMarker(oldLat, oldLng);
-                map.setView([oldLat, oldLng], 15);
-            }
-        } catch (e) {
-            console.error('Error loading previous location:', e);
-        }
-        @endif
+    window.appConfig = {
+        // API URL ကို သင်၏ API route နှင့် ကိုက်ညီအောင် ပြင်ပေးပါ
+        apiUrl: "{{ url('/api/v1/shops') }}",
+        exportUrl: "{{ route('admin.shops.export') }}"
+    };
+</script>
+@if(session('warning'))
+<script>
+    $(document).ready(function() {
+        $('#reportModal').modal('show');
     });
 </script>
-@endpush
+@endif
+<script src="{{ asset('js/shop-map.js') }}"></script>
+@endsection
