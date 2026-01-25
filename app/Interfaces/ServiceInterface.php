@@ -8,8 +8,6 @@ interface ServiceInterface {
 
     // ID တစ်ခုတည်းဖြင့် ရှာရန်
     public function findById($id);
-
-    // Data အသစ် သိမ်းရန်
     public function storeService(array $data);
 
     // ရှိပြီးသား Data ကို ပြင်ရန်
