@@ -11,6 +11,7 @@ use App\Exports\DuplicateShopsExport;
 
 class ShopService
 {
+
     protected $repo;
     protected $routeRepo;
 
@@ -27,8 +28,24 @@ class ShopService
     {
         return $this->repo->findShopById($id);
     }
+    // App\Services\ShopService.php ထဲတွင် ဖြည့်စွက်/ပြင်ဆင်ရန်
+
     public function create(array $data)
     {
+        // ၁။ Coordinates ထပ်မထပ် စစ်ဆေးခြင်း (Business Logic)
+        $exists = $this->repo->checkLocationExists($data['lat'], $data['lng']);
+        if ($exists) {
+            throw new \Exception('ဤတည်နေရာတွင် ဆိုင်ရှိနှင့်ပြီးသား ဖြစ်ပါသည်။');
+        }
+
+        // ၂။ ရက်စွဲ ပါလာလျှင် Format ပြင်ဆင်ခြင်း
+        if (!empty($data['created_at'])) {
+            $data['created_at'] = \Carbon\Carbon::parse($data['created_at']);
+        }
+
+        // // ၃။ ဘယ် Admin က သွင်းတာလဲဆိုတဲ့ ID ကို ထည့်သွင်းခြင်း
+        // // ဒါက Admin ၁ ယောက်မက ရှိလာရင်လည်း အလိုအလျောက် အလုပ်လုပ်မှာပါ
+        // $data['created_by'] = auth()->id();
         return $this->repo->createShop($data);
     }
     public function update($id, array $data)

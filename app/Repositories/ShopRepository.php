@@ -41,4 +41,7 @@ class ShopRepository implements ShopRepositoryInterface
         $item = $this->model->findOrFail($id);
         return $item->delete();
     }
+    public function checkLocationExists($lat, $lng) {
+        return $this->model->where('lat', $lat)->where('lng', $lng)->exists();
+    }
 }

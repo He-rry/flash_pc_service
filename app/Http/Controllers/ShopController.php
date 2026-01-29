@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Services\ShopService;
 use App\Models\Shop;
-use Carbon\Carbon;
+use App\Services\ShopService;
+use App\Http\Requests\StoreShopRequest;
+use Illuminate\Http\Request;
 
 class ShopController extends Controller
 {
@@ -19,38 +19,22 @@ class ShopController extends Controller
     {
         $shops = Shop::applyFilters($request->all())->latest()->paginate(10);
         $shops->appends($request->all());
-
         $regions = Shop::whereNotNull('region')->distinct()->pluck('region');
         return view('auth.maps.create', compact('shops', 'regions'));
     }
-    public function store(Request $request)
+
+    /**
+     * Store a newly created shop in storage
+     */
+    public function store(StoreShopRequest $request)
     {
-        // Validation
-        $request->validate([
-            'name'   => 'required|string|max:255|unique:shops,name',
-            'region' => 'required|string|max:255',
-            'lat'    => 'required|numeric',
-            'lng'    => 'required|numeric',
-        ], [
-            'name.unique'   => 'ဤဆိုင်နာမည်သည် ရှိပြီးသား ဖြစ်နေပါသည်။',
-            'lat.required'  => 'မြေပုံညွှန်း (Latitude) လိုအပ်ပါသည်။',
-            'lng.required'  => 'မြေပုံညွှန်း (Longitude) လိုအပ်ပါသည်။',
-        ]);
+        try {
+            $this->service->create($request->validated());
 
-
-        $exists = Shop::where('lat', $request->lat)
-            ->where('lng', $request->lng)
-            ->exists();
-
-        if ($exists) {
-            return back()->withErrors([
-                'lat' => 'ဤတည်နေရာ (Coordinates) တွင် ဆိုင်တစ်ဆိုင် ရှိနှင့်ပြီးသား ဖြစ်ပါသည်။'
-            ])->withInput();
+            return redirect()->back()->with('success', 'ဆိုင်အသစ်ကို အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ။');
+        } catch (\Exception $e) {
+            return back()->withErrors(['lat' => $e->getMessage()])->withInput();
         }
-
-        Shop::create($request->all());
-
-        return redirect()->back()->with('success', 'Shop added successfully!');
     }
 
     /**
@@ -63,12 +47,31 @@ class ShopController extends Controller
         if (count($result['duplicates']) > 0) {
             session()->put('duplicates', $result['duplicates']);
             session()->put('warning_msg', 'ထပ်နေသော ဒေတာ ' . count($result['duplicates']) . ' ခု တွေ့ရှိရပါသည်။');
-
             return back()->with('warning', true);
         }
 
         return back()->with('success', 'Imported successfully!');
     }
+
+    /**
+     * Export Shops to Excel with current filters
+     */
+    public function export(Request $request)
+    {
+        $filters = [
+            'search'    => $request->query('search'),
+            'region'    => $request->query('region'),
+            'period'    => $request->query('period'),
+            'from_date' => $request->query('from_date'),
+            'to_date'   => $request->query('to_date'),
+        ];
+
+        return $this->service->exportShops($filters);
+    }
+
+    /**
+     * Download Duplicate Data session
+     */
     public function downloadDuplicates(Request $request)
     {
         $duplicates = session('duplicates', []);
@@ -81,20 +84,5 @@ class ShopController extends Controller
         session()->forget(['duplicates', 'warning_msg']);
 
         return $file;
-    }
-    public function export(Request $request)
-    {
-        // Filter parameters များကို စုစည်းခြင်း
-        $filters = [
-            'search' => $request->query('search'),
-            'region' => $request->query('region'),
-            'period' => $request->query('period'),
-        ];
-        return $this->service->exportShops($filters);
-    }
-
-    public function show($id)
-    {
-        return back();
     }
 }

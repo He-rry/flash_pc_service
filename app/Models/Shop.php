@@ -15,23 +15,41 @@ class Shop extends Model
         'address',
         'region',
         'waypoints',
-        'created_at', // ဒါလေး ထည့်ပေးပါ
-        'updated_at'  // ဒါလေး ထည့်ပေးပါ
+        'created_at',
+        'updated_at'
     ];
 
     protected $casts = [
         'waypoints' => 'array',
     ];
+    // App\Models\Shop.php
+
+    // App\Models\Shop.php
+
     public function scopeApplyFilters($query, array $filters)
     {
         return $query->when($filters['search'] ?? null, function ($q, $search) {
             $q->where('name', 'like', '%' . $search . '%');
         })->when($filters['region'] ?? null, function ($q, $region) {
             $q->where('region', $region);
-        })->when($filters['period'] ?? null, function ($q, $period) {
-            if ($period !== 'all') {
-                $q->where('created_at', '<=', now()->subMonths((int)$period)->startOfDay());
-            }
-        });
+        })
+            // ၁။ ရက်စွဲအတိအကျ (From/To Date) ကို အရင်စစ်မည်
+            ->when($filters['from_date'] ?? null, function ($q, $from) {
+                $q->whereDate('created_at', '>=', $from);
+            })
+            ->when($filters['to_date'] ?? null, function ($q, $to) {
+                $q->whereDate('created_at', '<=', $to);
+            })
+            // ၂။ Custom ရက်စွဲမပါမှသာ Period (Today, 3M, 6M, 1Y) ကို စစ်မည်
+            ->when($filters['period'] ?? null, function ($q, $period) use ($filters) {
+                if (empty($filters['from_date']) && empty($filters['to_date'])) {
+                    if ($period === 'today') {
+                        $q->whereDate('created_at', now());
+                    } elseif (is_numeric($period)) {
+                        // 3, 6, 12 လ အတွက် logic
+                        $q->where('created_at', '<=', now()->subMonths((int)$period));
+                    }
+                }
+            });
     }
 }

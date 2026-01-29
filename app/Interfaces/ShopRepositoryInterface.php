@@ -9,4 +9,5 @@ interface ShopRepositoryInterface
     public function createShop(array $data);
     public function updateShop($id, array $data);
     public function deleteShop($id);
+    public function checkLocationExists($lat, $lng);
 }

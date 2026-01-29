@@ -10,13 +10,6 @@
         <div class="col-lg-8">
             <div class="custom-card p-4">
                 <h6 class="section-title mb-3"><i class="fas fa-plus-circle mr-2"></i>Register & Import Shops</h6>
-
-                @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show small py-2 shadow-sm" role="alert">
-                    <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                </div>
-                @endif
                 <form action="{{ route('admin.shops.store') }}" method="POST" class="mb-4">
                     @csrf
                     <div class="row align-items-start">
@@ -55,11 +48,15 @@
                             <input type="text" name="region" value="{{ old('region') }}"
                                 class="form-control form-control-sm" placeholder="Region">
                         </div>
-
                         <div class="col-md-2 px-1 mt-4">
                             <button type="submit" class="btn btn-primary btn-sm btn-block font-weight-bold shadow-sm py-2">
                                 <i class="fas fa-plus mr-1"></i> ADD
                             </button>
+                        </div>
+                        <div class="col-md-2 px-1 mb-2">
+                            <label class="small font-weight-bold text-muted ml-1 uppercase">Reg Date</label>
+                            <input type="date" name="created_at" value="{{ date('Y-m-d') }}"
+                                class="form-control form-control-sm">
                         </div>
                     </div>
                 </form>
@@ -92,7 +89,13 @@
 
         <div class="col-lg-4">
             <div class="custom-card p-4 h-100">
-                <h6 class="section-title mb-3"><i class="fas fa-filter mr-2"></i>Data Filters</h6>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="section-title mb-0"><i class="fas fa-filter mr-2"></i>Data Filters</h6>
+                    <span id="filterCountBadge" class="badge badge-dark shadow-sm" style="font-size: 11px; padding: 5px 10px; background-color: yellow !important; color:black !important;">
+                        {{ $shops->total() }} Shops
+                    </span>
+                </div>
+
                 <form id="filterForm" onsubmit="return false;">
                     <div class="mb-3">
                         <input type="text" id="mapSearch" class="form-control form-control-sm mb-2" placeholder="Search by shop name...">
@@ -119,45 +122,63 @@
                             <input type="radio" name="period" value="12"> 1Y
                         </label>
                     </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="small font-weight-bold text-muted">From Date</label>
+                            <input type="date" name="from_date" id="from_date" class="form-control form-control-sm">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small font-weight-bold text-muted">To Date</label>
+                            <input type="date" name="to_date" id="to_date" class="form-control form-control-sm">
+                        </div>
+                    </div>
                 </form>
+                <div class="mt-3">
+                    <button type="button" id="searchBtn" class="btn btn-primary btn-sm btn-block font-weight-bold shadow-sm">
+                        <i class="fas fa-search mr-1"></i> APPLY & SEARCH
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="custom-card p-3 shadow-sm mt-3">
-        <div id="map" style="height: 400px; border-radius: 8px;"></div>
     </div>
+</div>
+</div>
 
-    <div class="custom-card overflow-hidden shadow-sm mt-3">
-        <div class="card-header bg-white py-3">
-            <h6 class="section-title mb-0"><i class="fas fa-store mr-2"></i>Shop Directory</h6>
-        </div>
-        <div class="table-container">
-            <table class="table table-hover mb-0">
-                <thead>
-                    <tr>
-                        <th class="pl-4">Shop Name</th>
-                        <th>Coordinates</th>
-                        <th class="text-center">Region</th>
-                        <th class="text-right pr-4">Registered At</th>
-                    </tr>
-                </thead>
-                <tbody id="shopTableBody">
-                    @foreach($shops as $shop)
-                    <tr>
-                        <td class="pl-4"><strong>{{ $shop->name }}</strong></td>
-                        <td>{{ number_format($shop->lat, 5) }}, {{ number_format($shop->lng, 5) }}</td>
-                        <td class="text-center"><span class="badge badge-light border">{{ $shop->region }}</span></td>
-                        <td class="text-right pr-4 small text-muted">{{ $shop->created_at->format('d/m/Y') }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-        <div id="paginationContainer" class="card-footer bg-light py-3 d-flex justify-content-center">
-            {{ $shops->links('pagination::bootstrap-4') }}
-        </div>
+<div class="custom-card p-3 shadow-sm mt-3">
+    <div id="map" style="height: 400px; border-radius: 8px;"></div>
+</div>
+
+<div class="custom-card overflow-hidden shadow-sm mt-3">
+    <div class="card-header bg-white py-3">
+        <h6 class="section-title mb-0"><i class="fas fa-store mr-2"></i>Shop Directory</h6>
     </div>
+    <div class="table-container">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th class="pl-4">Shop Name</th>
+                    <th>Coordinates</th>
+                    <th class="text-center">Region</th>
+                    <th class="text-right pr-4">Registered At</th>
+                </tr>
+            </thead>
+            <tbody id="shopTableBody">
+                @foreach($shops as $shop)
+                <tr>
+                    <td class="pl-4"><strong>{{ $shop->name }}</strong></td>
+                    <td>{{ number_format($shop->lat, 5) }}, {{ number_format($shop->lng, 5) }}</td>
+                    <td class="text-center"><span class="badge badge-light border">{{ $shop->region }}</span></td>
+                    <td class="text-right pr-4 small text-muted">{{ $shop->created_at->format('d/m/Y') }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+    <div id="paginationContainer" class="card-footer bg-light py-3 d-flex justify-content-center">
+        {{ $shops->links('pagination::bootstrap-4') }}
+    </div>
+</div>
 </div>
 @include('auth.maps.partials.import_modal')
 
