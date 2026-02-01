@@ -8,10 +8,12 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\ShopsImport;
 use App\Exports\ShopsExport;
 use App\Exports\DuplicateShopsExport;
+use App\Models\ActivityLog;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class ShopService
 {
-
     protected $repo;
     protected $routeRepo;
 
@@ -28,53 +30,52 @@ class ShopService
     {
         return $this->repo->findShopById($id);
     }
-    // App\Services\ShopService.php ထဲတွင် ဖြည့်စွက်/ပြင်ဆင်ရန်
-
     public function create(array $data)
     {
-        // ၁။ Coordinates ထပ်မထပ် စစ်ဆေးခြင်း (Business Logic)
+        $data['added_by'] = Auth::check() ? Auth::id() : null;
         $exists = $this->repo->checkLocationExists($data['lat'], $data['lng']);
         if ($exists) {
             throw new \Exception('ဤတည်နေရာတွင် ဆိုင်ရှိနှင့်ပြီးသား ဖြစ်ပါသည်။');
         }
-
-        // ၂။ ရက်စွဲ ပါလာလျှင် Format ပြင်ဆင်ခြင်း
         if (!empty($data['created_at'])) {
-            $data['created_at'] = \Carbon\Carbon::parse($data['created_at']);
+            $data['created_at'] = Carbon::parse($data['created_at']);
         }
+        $shop = $this->repo->createShop($data);
+        $this->logActivity('ADD', "Added a new shop: " . $shop->name);
 
-        // // ၃။ ဘယ် Admin က သွင်းတာလဲဆိုတဲ့ ID ကို ထည့်သွင်းခြင်း
-        // // ဒါက Admin ၁ ယောက်မက ရှိလာရင်လည်း အလိုအလျောက် အလုပ်လုပ်မှာပါ
-        // $data['created_by'] = auth()->id();
-        return $this->repo->createShop($data);
+        return $shop;
     }
+
     public function update($id, array $data)
     {
-        return $this->repo->updateShop($id, $data);
+        $shop = $this->repo->updateShop($id, $data);
+        $this->logActivity('UPDATE', "Updated information for shop: " . $shop->name);
+        return $shop;
     }
     public function delete($id)
     {
+        $shop = $this->find($id);
+        $this->logActivity('DELETE', "Deleted shop: " . $shop->name);
         return $this->repo->deleteShop($id);
     }
     public function exportShops($filters = [])
     {
+        $this->logActivity('EXPORT', "Exported shops list to Excel.");
         return Excel::download(new ShopsExport($filters), 'shops_report.xlsx');
     }
+
     public function importShops($file, $action = 'skip')
     {
-        $import = new ShopsImport($action);
+        $import = new ShopsImport($action, Auth::id());
         Excel::import($import, $file);
+
+        $this->logActivity('IMPORT', "Imported shops from Excel file (Action: $action).");
 
         return [
             'duplicates' => $import->duplicateRows,
-            'action' => $action
+            'action' => $action,
         ];
     }
-
-    /**
-     * Excel ဖိုင်မှ Waypoints (Route) ကို Parse လုပ်ရန်
-     * Lat/Lng ထပ်နေပါက စစ်ထုတ်ပေးသည်
-     */
     public function parseExcelToWaypoints($file): array
     {
         $sheets = Excel::toArray(null, $file);
@@ -83,14 +84,13 @@ class ShopService
         $start = 0;
         if (!empty($rows)) {
             $first = array_values($rows[0]);
-            // Header row ပါမပါ စစ်ဆေးခြင်း
             if (isset($first[1]) && is_string($first[1]) && preg_match('/[a-zA-Z]/', $first[1])) {
                 $start = 1;
             }
         }
 
         $waypoints = [];
-        $uniqueKeys = []; // Lat|Lng အတွဲလိုက်ကို မှတ်ထားရန်
+        $uniqueKeys = [];
 
         for ($i = $start; $i < count($rows); $i++) {
             $row = $rows[$i];
@@ -119,23 +119,33 @@ class ShopService
 
         return $waypoints;
     }
-
     public function createRouteFromWaypoints(string $routeName, array $waypoints)
     {
-        return $this->routeRepo->store([
+        $route = $this->routeRepo->store([
             'route_name' => $routeName,
             'waypoints' => $waypoints,
         ]);
+
+        $this->logActivity('ROUTE_CREATE', "Created a new map route: " . $routeName);
+        return $route;
     }
-    /**
-     * Export duplicate shops to Excel
-     */
     public function exportDuplicates($duplicates, $color = 'yellow')
     {
+        $this->logActivity('EXPORT', "Exported duplicate shops list.");
         $duplicateExport = new DuplicateShopsExport($duplicates, $color);
         return Excel::download(
             $duplicateExport,
             'duplicate_shops_' . date('Y-m-d_His') . '.xlsx'
         );
+    }
+    private function logActivity($action, $description)
+    {
+        ActivityLog::create([
+            'user_id'     => Auth::id(),
+            'action'      => $action,
+            'module'      => 'SHOPS',
+            'description' => $description,
+            'ip_address'  => request()->ip(),
+        ]);
     }
 }

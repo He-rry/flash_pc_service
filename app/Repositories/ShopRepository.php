@@ -16,7 +16,7 @@ class ShopRepository implements ShopRepositoryInterface
 
     public function getAllShops()
     {
-        return $this->model->all();
+        return $this->model->with('admin')->latest()->get();
     }
 
     public function findShopById($id)
@@ -41,7 +41,8 @@ class ShopRepository implements ShopRepositoryInterface
         $item = $this->model->findOrFail($id);
         return $item->delete();
     }
-    public function checkLocationExists($lat, $lng) {
+    public function checkLocationExists($lat, $lng)
+    {
         return $this->model->where('lat', $lat)->where('lng', $lng)->exists();
     }
 }

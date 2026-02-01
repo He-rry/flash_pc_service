@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Services\RouteService;
 use App\Http\Requests\StoreShopRequest;
 use App\Http\Requests\StoreRouteRequest;
@@ -10,7 +11,6 @@ class RouteController extends Controller
 {
     protected RouteService $routeService;
     protected ShopService $shopService;
-
     public function __construct(RouteService $routeService, ShopService $shopService)
     {
         $this->routeService = $routeService;
@@ -51,8 +51,6 @@ class RouteController extends Controller
 
         return view('auth.maps.saved_map_route', compact('routes'));
     }
-
-    // ၂။ ရွေးချယ်လိုက်တဲ့ Route တစ်ခုကို Map ပေါ်မှာ အသေးစိတ်ကြည့်ရန်
     public function showRoute($id)
     {
         $route = $this->routeService->find($id);

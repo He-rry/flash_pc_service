@@ -150,26 +150,50 @@
 </div>
 
 <div class="custom-card overflow-hidden shadow-sm mt-3">
-    <div class="card-header bg-white py-3">
-        <h6 class="section-title mb-0"><i class="fas fa-store mr-2"></i>Shop Directory</h6>
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="section-title mb-0">
+            <i class="fas fa-store mr-2 text-primary"></i>Shop Directory
+        </h6>
+
+        <a href="{{ route('admin.logs.index') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+            <i class="fas fa-history mr-1"></i> View Activity Logs
+        </a>
     </div>
     <div class="table-container">
         <table class="table table-hover mb-0">
             <thead>
                 <tr>
-                    <th class="pl-4">Shop Name</th>
-                    <th>Coordinates</th>
-                    <th class="text-center">Region</th>
-                    <th class="text-right pr-4">Registered At</th>
+                    <th class="pl-4"><i class="fas fa-store mr-1 text-muted"></i> Shop Name</th>
+                    <th><i class="fas fa-map-marker-alt mr-1 text-muted"></i> Coordinates</th>
+                    <th class="text-center"><i class="fas fa-globe mr-1 text-muted"></i> Region</th>
+                    <th class="text-center"><i class="fas fa-user-shield mr-1 text-muted"></i> Added By</th>
+                    <th class="text-right pr-4"><i class="fas fa-calendar-alt mr-1 text-muted"></i> Registered At</th>
                 </tr>
             </thead>
             <tbody id="shopTableBody">
                 @foreach($shops as $shop)
                 <tr>
                     <td class="pl-4"><strong>{{ $shop->name }}</strong></td>
-                    <td>{{ number_format($shop->lat, 5) }}, {{ number_format($shop->lng, 5) }}</td>
-                    <td class="text-center"><span class="badge badge-light border">{{ $shop->region }}</span></td>
-                    <td class="text-right pr-4 small text-muted">{{ $shop->created_at->format('d/m/Y') }}</td>
+                    <td>
+                        <span class="text-monospace small bg-light px-2 py-1 rounded">
+                            {{ number_format($shop->lat, 5) }}, {{ number_format($shop->lng, 5) }}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <span class="badge badge-light border font-weight-normal">{{ $shop->region }}</span>
+                    </td>
+                    <td class="text-center">
+                        @if($shop->admin)
+                        <span class="badge badge-info-soft text-info px-2 py-1" style="background-color: #e0f2ff;">
+                            <i class="fas fa-user-check mr-1 small"></i>{{ $shop->admin->name }}
+                        </span>
+                        @else
+                        <span class="text-muted small">System</span>
+                        @endif
+                    </td>
+                    <td class="text-right pr-4 small text-muted">
+                        {{ $shop->created_at->format('d/m/Y') }}
+                    </td>
                 </tr>
                 @endforeach
             </tbody>
@@ -178,7 +202,6 @@
     <div id="paginationContainer" class="card-footer bg-light py-3 d-flex justify-content-center">
         {{ $shops->links('pagination::bootstrap-4') }}
     </div>
-</div>
 </div>
 @include('auth.maps.partials.import_modal')
 

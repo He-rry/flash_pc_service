@@ -14,6 +14,7 @@ class Shop extends Model
         'lng',
         'address',
         'region',
+        'added_by',
         'waypoints',
         'created_at',
         'updated_at'
@@ -22,10 +23,10 @@ class Shop extends Model
     protected $casts = [
         'waypoints' => 'array',
     ];
-    // App\Models\Shop.php
-
-    // App\Models\Shop.php
-
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'added_by');
+    }
     public function scopeApplyFilters($query, array $filters)
     {
         return $query->when($filters['search'] ?? null, function ($q, $search) {

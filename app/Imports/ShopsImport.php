@@ -3,7 +3,6 @@
 namespace App\Imports;
 
 use App\Models\Shop;
-use Carbon\Carbon;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
 
@@ -13,21 +12,20 @@ class ShopsImport implements ToModel, WithHeadingRow
 {
     public $duplicateRows = [];
     protected $action;
+    protected $added_by;
 
-    public function __construct($action)
+    public function __construct($action, $admin_id)
     {
         $this->action = $action;
+        $this->added_by = $admin_id;
     }
     public function model(array $row)
     {
-        // Row အလွတ်ဖြစ်နေရင် ကျော်သွားမယ်
         if (empty($row['shop_name']) || empty($row['latitude'])) {
             return null;
         }
-        // ၁။ နာမည်တူ စစ်မယ်
         $existingByName = Shop::where('name', $row['shop_name'])->first();
 
-        // ၂။ Lat/Lng တူ စစ်မယ်
         $existingByLocation = Shop::where('lat', $row['latitude'])
             ->where('lng', $row['longitude'])
             ->first();
@@ -44,15 +42,14 @@ class ShopsImport implements ToModel, WithHeadingRow
             ];
             return null;
         }
-
-        // အသစ်ဆိုမှ Insert လုပ်မယ်
         return new Shop([
             'name'       => $row['shop_name'],
             'lat'        => $row['latitude'],
             'lng'        => $row['longitude'],
             'region'     => $row['region'],
-            'created_at' =>now(),
-            'updated_at' =>now()
+            'created_at' => now(),
+            'updated_at' => now(),
+            'added_by' => $this->added_by,
         ]);
     }
 }

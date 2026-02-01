@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ShopController; // ShopController
 use App\Http\Controllers\RouteController; // RouteController
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ActivityLogController;
 
 // --- Public Landing Page ---
 Route::get('/', function () {
@@ -32,7 +33,7 @@ Route::middleware(['AdminAuth'])->prefix('admin')->name('admin.')->group(functio
     Route::resource('statuses', StatusController::class);
     Route::resource('service-types', ServiceTypeController::class);
     Route::get('shops/export', [ShopController::class, 'export'])->name('shops.export');
-    Route::post('shops/3import', [ShopController::class, 'import'])->name('shops.import');
+    Route::post('shops/import', [ShopController::class, 'import'])->name('shops.import');
     Route::get('shops/export-duplicates', [ShopController::class, 'downloadDuplicates'])
         ->name('shops.download.duplicates');
     Route::resource('shops', ShopController::class);
@@ -42,4 +43,5 @@ Route::middleware(['AdminAuth'])->prefix('admin')->name('admin.')->group(functio
     // routes/web.php
     Route::get('/saved_map_route', [RouteController::class, 'savedRoutes'])->name('maps.saved');
     Route::get('/show_route/{id}', [RouteController::class, 'showRoute'])->name('maps.show');
+    Route::get('/activity-history', [ActivityLogController::class, 'index'])->name('logs.index');
 });

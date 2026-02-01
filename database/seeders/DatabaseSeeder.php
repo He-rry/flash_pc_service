@@ -21,23 +21,33 @@ class DatabaseSeeder extends Seeder
             'created_at' => now()->subMonths(2),
         ]);
 
-        // 6M Filter မှာ ပေါ်မည့် data (လွန်ခဲ့သော ၅ လ)
+        // 6M Filter
         \App\Models\Shop::factory(10)->create([
             'created_at' => now()->subMonths(5),
         ]);
 
-        // 9M Filter မှာ ပေါ်မည့် data (လွန်ခဲ့သော ၈ လ)
+        // 9M Filter
         \App\Models\Shop::factory(10)->create([
             'created_at' => now()->subMonths(8),
         ]);
 
-        // All မှာပဲ ပေါ်မည့် data (လွန်ခဲ့သော ၁ နှစ်ကျော်)
+        // All 
         \App\Models\Shop::factory(10)->create([
             'created_at' => now()->subMonths(14),
         ]);
         \App\Models\User::create([
-            'name' => 'Admin User',
+            'name' => 'System',
             'email' => 'admin@gmail.com',
+            'password' => bcrypt('password123'),
+        ]);
+        \App\Models\User::factory()->create([
+            'name' => 'Admin1',
+            'email' => 'admin1@test.com',
+            'password' => bcrypt('password123'),
+        ]);
+        \App\Models\User::factory()->create([
+            'name' => 'Admin2',
+            'email' => 'admin2@test.com',
             'password' => bcrypt('password123'),
         ]);
     }

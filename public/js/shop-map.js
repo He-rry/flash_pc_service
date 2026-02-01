@@ -7,12 +7,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
-        // ၁။ Map Initialization
         map = L.map('map').setView([16.8331, 96.1427], 12);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         markerLayer = L.layerGroup().addTo(map);
-
-        // ၂။ Map Click လုပ်လျှင် Latitude/Longitude ထည့်ပေးခြင်း
         map.on('click', (e) => {
             const { lat, lng } = e.latlng;
             document.getElementById('form_lat').value = lat.toFixed(6);
@@ -20,13 +17,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (tempMarker) map.removeLayer(tempMarker);
             tempMarker = L.marker([lat, lng]).addTo(map).bindPopup("Selected Location").openPopup();
         });
-
-        // ၃။ Listeners များ စတင်ခြင်း
         setupFilterListeners();
-
-        // ၄။ စတင်ချိန်တွင် Data တစ်ခါ ဆွဲယူခြင်း
         fetchData();
-
         setTimeout(() => { map.invalidateSize(); }, 500);
     }
 });
@@ -34,22 +26,17 @@ document.addEventListener('DOMContentLoaded', function () {
 function setupFilterListeners() {
     const searchBtn = document.getElementById('searchBtn');
     const periodRads = document.querySelectorAll('input[name="period"]');
-
-    // Radio Buttons (Period) အတွက် UI Toggle သက်သက်သာ လုပ်ခြင်း
     periodRads.forEach(rad => {
         rad.addEventListener('change', function () {
             periodRads.forEach(r => r.parentElement.classList.remove('active'));
             if (this.checked) this.parentElement.classList.add('active');
-            // ဤနေရာတွင် fetchData ကို မခေါ်တော့ပါ (Search Button နှိပ်မှ ခေါ်မည်)
         });
     });
 
-    // Search Button နှိပ်မှသာ Data ရှာဖွေခြင်း
+    // Search Button 
     searchBtn?.addEventListener('click', () => {
         fetchData(1);
     });
-
-    // Enter Key ခေါက်လျှင်လည်း Search အလုပ်လုပ်စေရန်
     document.getElementById('filterForm')?.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -57,7 +44,7 @@ function setupFilterListeners() {
         }
     });
 
-    // Pagination Click လုပ်လျှင်
+    // Pagination Click 
     document.addEventListener('click', function (e) {
         const link = e.target.closest('#paginationContainer a');
         if (link) {
@@ -67,18 +54,13 @@ function setupFilterListeners() {
         }
     });
 }
-
-// shop-map.js ထဲရှိ fetchData function ထဲတွင် ပြင်ရန်
 async function fetchData(page = 1) {
     const fromDate = document.getElementById('from_date')?.value || '';
     const toDate = document.getElementById('to_date')?.value || '';
     const searchVal = document.getElementById('mapSearch')?.value || '';
     const regionVal = document.getElementById('regionFilter')?.value || '';
-
-    // ရွေးချယ်ထားသော Radio Button ၏ တန်ဖိုးကို ယူခြင်း
     const periodElement = document.querySelector('input[name="period"]:checked');
     const periodVal = periodElement ? periodElement.value : 'all';
-
     const params = new URLSearchParams({
         search: searchVal,
         region: regionVal,
@@ -95,16 +77,12 @@ async function fetchData(page = 1) {
     try {
         const response = await fetch(`${window.appConfig.apiUrl}?${params.toString()}`);
         const result = await response.json();
-
-        // ၃။ Filter Count Badge Update လုပ်ခြင်း
         const total = result.total || 0;
         const countBadge = document.getElementById('filterCountBadge');
         if (countBadge) {
             countBadge.innerText = `${total} Shops`;
             countBadge.className = total === 0 ? 'badge badge-danger shadow-sm' : 'badge badge-primary shadow-sm';
         }
-
-        // ၄။ Shop မရှိလျှင် Export Button ကို ပိတ်ထားခြင်း
         if (exportBtn) {
             if (total === 0) {
                 exportBtn.classList.add('disabled', 'btn-secondary');
@@ -116,8 +94,6 @@ async function fetchData(page = 1) {
                 exportBtn.style.opacity = '1';
             }
         }
-
-        // ၅။ Table နှင့် Map ပေါ်တွင် Data ပြသခြင်း
         const tbody = document.getElementById('shopTableBody');
         if (total === 0) {
             tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-danger font-weight-bold"><i class="fas fa-exclamation-circle mr-2"></i>ကိုက်ညီသော ဒေတာ မရှိပါ။</td></tr>';
@@ -135,14 +111,23 @@ async function fetchData(page = 1) {
 
 function renderTable(shops) {
     const tbody = document.getElementById('shopTableBody');
-    tbody.innerHTML = shops.map(shop => `
-        <tr>
-            <td class="pl-4"><strong>${shop.name}</strong></td>
-            <td>${parseFloat(shop.lat).toFixed(5)}, ${parseFloat(shop.lng).toFixed(5)}</td>
-            <td class="text-center"><span class="badge badge-light border">${shop.region || '-'}</span></td>
-            <td class="text-right pr-4 small text-muted">${new Date(shop.created_at).toLocaleDateString('en-GB')}</td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = shops.map(shop => {
+        const adminName = shop.admin ? shop.admin.name : 'System';
+
+        return `
+            <tr>
+                <td class="pl-4"><strong>${shop.name}</strong></td>
+                <td>${parseFloat(shop.lat).toFixed(5)}, ${parseFloat(shop.lng).toFixed(5)}</td>
+                <td class="text-center"><span class="badge badge-light border">${shop.region || '-'}</span></td>
+                <td class="text-center">
+                    <span class="badge badge-info-soft text-info px-2 py-1" style="background-color: #e0f2ff; font-size: 0.85rem;">
+                        <i class="fas fa-user-check mr-1"></i>${adminName}
+                    </span>
+                </td>
+                <td class="text-right pr-4 small text-muted">${new Date(shop.created_at).toLocaleDateString('en-GB')}</td>
+            </tr>
+        `;
+    }).join('');
 }
 
 function renderMarkers(shops) {

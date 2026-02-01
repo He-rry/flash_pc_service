@@ -16,9 +16,8 @@ class RoutePlannerController extends Controller
     public function index()
     {
         $data = $this->service->list();
-        $shops = $data['shops']; // Database ထဲက ဆိုင်အားလုံးယူမယ်
+        $shops = $data['shops'];
         $routes = $data['routes'];
-
         return view('auth.index', compact('shops', 'routes'));
     }
 }

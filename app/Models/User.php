@@ -45,4 +45,8 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function addedShops()
+    {
+        return $this->hasMany(Shop::class, 'added_by');
+    }
 }

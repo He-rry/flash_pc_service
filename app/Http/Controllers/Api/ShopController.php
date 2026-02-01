@@ -11,8 +11,7 @@ class ShopController extends Controller
     // Api/ShopController.php
     public function index(Request $request)
     {
-        $query = Shop::applyFilters($request->all())->latest();
-
+        $query = Shop::with('admin')->applyFilters($request->all())->latest();
         $allFiltered = (clone $query)->get(); // Map အတွက် Marker အားလုံးယူမယ်
         $paginated = $query->paginate(10); // Table အတွက် pagination နဲ့ ယူမယ်
 

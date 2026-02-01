@@ -22,10 +22,6 @@ class ShopController extends Controller
         $regions = Shop::whereNotNull('region')->distinct()->pluck('region');
         return view('auth.maps.create', compact('shops', 'regions'));
     }
-
-    /**
-     * Store a newly created shop in storage
-     */
     public function store(StoreShopRequest $request)
     {
         try {
@@ -37,9 +33,6 @@ class ShopController extends Controller
         }
     }
 
-    /**
-     * Excel Import လုပ်ခြင်း
-     */
     public function import(Request $request)
     {
         $result = $this->service->importShops($request->file('file'), 'skip');
