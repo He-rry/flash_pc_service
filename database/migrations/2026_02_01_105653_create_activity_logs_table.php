@@ -11,15 +11,13 @@ return new class extends Migration
      */
     public function up()
     {
-        // ၁။ Shops table မှာ added_by ထည့်ခြင်း
         Schema::table('shops', function (Blueprint $table) {
             $table->foreignId('added_by')->nullable()->constrained('users')->onDelete('set null');
         });
-
-        // ၂။ Activity Logs table အသစ်ဆောက်ခြင်း
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+           $table->foreignId('shop_id')->nullable()->constrained('shops')->onDelete('set null');
             $table->string('action'); // 'ADD', 'IMPORT', 'EXPORT'
             $table->string('module')->default('SHOPS');
             $table->text('description');

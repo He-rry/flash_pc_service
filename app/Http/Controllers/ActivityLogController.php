@@ -2,13 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\ActivityLog;
 
 class ActivityLogController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $logs = ActivityLog::with('user')->latest()->paginate(15);
+        $query = ActivityLog::with('user');
+        if ($request->has('shop_id') && $request->shop_id != '') {
+            $query->where('shop_id', $request->shop_id);
+        }
+
+        $logs = $query->latest()->paginate(15);
         return view('auth.logs.index', compact('logs'));
     }
 }

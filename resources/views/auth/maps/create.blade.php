@@ -4,6 +4,20 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 <link rel="stylesheet" href="{{ asset('css/shop-map.css') }}">
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+<!-- noti msg -->
+<div aria-live="polite" aria-atomic="true" style="position: fixed; top: 20px; right: 20px; z-index: 9999;">
+    <div id="toast-message" class="toast hide shadow-lg border-0" role="alert" aria-live="assertive" aria-atomic="true" data-delay="1500">
+        <div class="toast-header text-white" id="toast-header">
+            <strong class="mr-auto">System Notification</strong>
+            <button type="button" class=" ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        <div class="toast-body text-dark font-weight-bold" id="toast-body"></div>
+    </div>
+</div>
 
 <div class="dashboard-container">
     <div class="row">
@@ -86,7 +100,6 @@
                 </form>
             </div>
         </div>
-
         <div class="col-lg-4">
             <div class="custom-card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -203,7 +216,9 @@
         {{ $shops->links('pagination::bootstrap-4') }}
     </div>
 </div>
+@include('auth.maps.partials.update_delete_modal')
 @include('auth.maps.partials.import_modal')
+@include('auth.logs.shopslog')
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

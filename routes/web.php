@@ -44,4 +44,5 @@ Route::middleware(['AdminAuth'])->prefix('admin')->name('admin.')->group(functio
     Route::get('/saved_map_route', [RouteController::class, 'savedRoutes'])->name('maps.saved');
     Route::get('/show_route/{id}', [RouteController::class, 'showRoute'])->name('maps.show');
     Route::get('/activity-history', [ActivityLogController::class, 'index'])->name('logs.index');
+    Route::get('shops/{id}/logs', [App\Http\Controllers\ShopController::class, 'getLogs'])->name('admin.shops.logs');
 });

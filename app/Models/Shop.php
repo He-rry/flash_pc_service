@@ -27,6 +27,10 @@ class Shop extends Model
     {
         return $this->belongsTo(User::class, 'added_by');
     }
+    public function activity()
+    {
+        return $this->hasMany(ActivityLog::class, 'shop_id')->latest();
+    }
     public function scopeApplyFilters($query, array $filters)
     {
         return $query->when($filters['search'] ?? null, function ($q, $search) {
@@ -34,14 +38,12 @@ class Shop extends Model
         })->when($filters['region'] ?? null, function ($q, $region) {
             $q->where('region', $region);
         })
-            // ၁။ ရက်စွဲအတိအကျ (From/To Date) ကို အရင်စစ်မည်
             ->when($filters['from_date'] ?? null, function ($q, $from) {
                 $q->whereDate('created_at', '>=', $from);
             })
             ->when($filters['to_date'] ?? null, function ($q, $to) {
                 $q->whereDate('created_at', '<=', $to);
             })
-            // ၂။ Custom ရက်စွဲမပါမှသာ Period (Today, 3M, 6M, 1Y) ကို စစ်မည်
             ->when($filters['period'] ?? null, function ($q, $period) use ($filters) {
                 if (empty($filters['from_date']) && empty($filters['to_date'])) {
                     if ($period === 'today') {

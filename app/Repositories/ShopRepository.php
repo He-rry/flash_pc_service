@@ -21,7 +21,7 @@ class ShopRepository implements ShopRepositoryInterface
 
     public function findShopById($id)
     {
-        return $this->model->findOrFail($id);
+        return $this->model->find($id);
     }
 
     public function createShop(array $data)
