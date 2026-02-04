@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Interfaces\ServiceInterface;
 use App\Models\Status;
+use Illuminate\Support\Facades\Gate;
 
 class ServiceService
 {
@@ -51,11 +52,13 @@ class ServiceService
 
     public function updateRecord($id, $data)
     {
+        Gate::authorize('manage-services');
         return $this->serviceRepo->updateService($id, $data);
     }
 
     public function deleteRecord($id)
     {
+        Gate::authorize('manage-services');
         return $this->serviceRepo->deleteService($id);
     }
 }

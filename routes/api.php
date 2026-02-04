@@ -10,8 +10,8 @@ Route::middleware(['web', 'auth'])->prefix('v1')->group(function () {
     // Route resources (read: any authenticated; write: manage-routes)
     Route::get('/routes', [ApiRouteController::class, 'index']);
     Route::get('/routes/{id}', [ApiRouteController::class, 'show']);
-    Route::post('/routes', [ApiRouteController::class, 'store']);
-    Route::delete('/routes/{id}', [ApiRouteController::class, 'destroy']);
+    Route::post('/routes', [ApiRouteController::class, 'store'])->middleware('permission:manage-routes');
+    Route::delete('/routes/{id}', [ApiRouteController::class, 'destroy'])->middleware('permission:manage-routes');
     // Shop resources for map filtering/search (any authenticated admin can view)
     Route::get('/shops', [ApiShopController::class, 'index'])->name('shops.index');
 });

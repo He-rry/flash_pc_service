@@ -16,6 +16,7 @@ class RouteController extends Controller
     {
         $this->routeService = $routeService;
         $this->shopService = $shopService;
+        $this->middleware('permission:manage-routes')->only(['store', 'destroy']);
     }
 
     public function index()

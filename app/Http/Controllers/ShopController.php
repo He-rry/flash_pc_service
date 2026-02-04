@@ -16,6 +16,9 @@ class ShopController extends Controller
     public function __construct(ShopService $service)
     {
         $this->service = $service;
+        $this->middleware('permission:manage-shops')->only(['create', 'store', 'update', 'import', 'export', 'downloadDuplicates']);
+        $this->middleware('permission:delete-shops')->only(['destroy']);
+        $this->middleware('permission:view-logs')->only(['getLogs']);
     }
 
     /**

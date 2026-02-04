@@ -32,14 +32,15 @@ Route::middleware(['AdminAuth'])->prefix('admin')->name('admin.')->group(functio
     Route::resource('services', ServiceController::class);
     Route::resource('statuses', StatusController::class);
     Route::resource('service-types', ServiceTypeController::class);
-    Route::get('shops/export', [ShopController::class, 'export'])->name('shops.export');
-    Route::post('shops/import', [ShopController::class, 'import'])->name('shops.import');
+    Route::get('shops/export', [ShopController::class, 'export'])->name('shops.export')->middleware('permission:manage-shops');
+    Route::post('shops/import', [ShopController::class, 'import'])->name('shops.import')->middleware('permission:manage-shops');
     Route::get('shops/export-duplicates', [ShopController::class, 'downloadDuplicates'])
-        ->name('shops.download.duplicates');
+        ->name('shops.download.duplicates')->middleware('permission:manage-shops');
     Route::resource('shops', ShopController::class);
+    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
     Route::get('/route-planner', [RouteController::class, 'index'])->name('maps.index');
-    Route::post('/routes/store', [RouteController::class, 'store'])->name('maps.store');
-    Route::delete('/routes/{id}', [RouteController::class, 'destroy'])->name('maps.destroy');
+    Route::post('/routes/store', [RouteController::class, 'store'])->name('maps.store')->middleware('permission:manage-routes');
+    Route::delete('/routes/{id}', [RouteController::class, 'destroy'])->name('maps.destroy')->middleware('permission:manage-routes');
     // routes/web.php
     Route::get('/saved_map_route', [RouteController::class, 'savedRoutes'])->name('maps.saved');
     Route::get('/show_route/{id}', [RouteController::class, 'showRoute'])->name('maps.show');

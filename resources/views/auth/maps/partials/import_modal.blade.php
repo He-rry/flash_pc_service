@@ -38,9 +38,11 @@
                 </div>
             </div>
             <div class="modal-footer bg-light border-0">
+                @can('manage-shops')
                 <a href="{{ route('admin.shops.download.duplicates') }}" class="btn btn-success btn-sm px-4 font-weight-bold">
                     <i class="fas fa-file-excel mr-1"></i> DOWNLOAD EXCEL
                 </a>
+                @endcan
                 <button type="button" class="btn btn-secondary btn-sm px-3" id="btn-close" data-bs-dismiss="modal">CLOSE</button>
             </div>
         </div>

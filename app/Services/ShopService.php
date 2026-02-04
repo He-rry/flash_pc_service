@@ -9,6 +9,7 @@ use App\Imports\ShopsImport;
 use App\Exports\ShopsExport;
 use App\Exports\DuplicateShopsExport;
 use App\Models\ActivityLog;
+use Illuminate\Support\Facades\Gate;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,6 +27,7 @@ class ShopService
     // --- CRUD Methods ---
     public function store(array $data)
     {
+        Gate::authorize('manage-shops');
         if ($this->repo->checkLocationExists($data['lat'], $data['lng'])) {
             throw new \Exception('ဤတည်နေရာတွင် ဆိုင်ရှိနှင့်ပြီးသား ဖြစ်ပါသည်။');
         }
@@ -39,6 +41,7 @@ class ShopService
 
     public function update($id, array $data)
     {
+        Gate::authorize('manage-shops');
         $shop = $this->repo->findShopById($id);
 
         $changes = [];
@@ -66,6 +69,7 @@ class ShopService
     }
     public function delete($id)
     {
+        Gate::authorize('delete-shops');
         $shop = $this->repo->findShopById($id);
         if (!$shop) {
             throw new \Exception('ဆိုင်ကို ရှာမတွေ့ပါ။');
@@ -80,11 +84,13 @@ class ShopService
     }
     public function exportShops(array $filters)
     {
+        Gate::authorize('manage-shops');
         $this->logActivity('EXPORT', "Exported shop list to Excel");
         return Excel::download(new ShopsExport($filters), 'shops_report.xlsx');
     }
     public function importShops($file, $action = 'skip')
     {
+        Gate::authorize('manage-shops');
         $import = new ShopsImport($action, Auth::id());
         Excel::import($import, $file);
 
@@ -94,9 +100,15 @@ class ShopService
             'duplicates' => $import->duplicateRows
         ];
     }
+    //create shop
+    public function create()
+    {
+        return $this->repo->getAllShops();
+    }
 
     public function exportDuplicates($duplicates)
     {
+        Gate::authorize('manage-shops');
         $this->logActivity('EXPORT', "Exported duplicate shops list");
         return Excel::download(new DuplicateShopsExport($duplicates, 'yellow'), 'duplicates.xlsx');
     }
@@ -104,6 +116,7 @@ class ShopService
     // --- Logging & Logs ---
     public function getShopLogs($id)
     {
+        Gate::authorize('view-logs');
         return ActivityLog::with('user:id,name')->where('shop_id', $id)->latest()->get();
     }
 

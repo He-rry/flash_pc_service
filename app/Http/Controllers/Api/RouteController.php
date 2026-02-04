@@ -16,6 +16,7 @@ class RouteController extends Controller
     public function __construct(RouteService $service)
     {
         $this->service = $service;
+        $this->middleware('permission:manage-routes')->only(['store', 'destroy']);
     }
 
     public function index()

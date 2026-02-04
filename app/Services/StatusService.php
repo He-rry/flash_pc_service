@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Interfaces\StatusRepositoryInterface;
+use Illuminate\Support\Facades\Gate;
 
 class StatusService
 {
@@ -25,16 +26,19 @@ class StatusService
 
     public function create(array $data)
     {
+        Gate::authorize('manage-services');
         return $this->repo->createStatus($data);
     }
 
     public function update($id, array $data)
     {
+        Gate::authorize('manage-services');
         return $this->repo->updateStatus($id, $data);
     }
 
     public function delete($id)
     {
+        Gate::authorize('manage-services');
         return $this->repo->deleteStatus($id);
     }
 }
