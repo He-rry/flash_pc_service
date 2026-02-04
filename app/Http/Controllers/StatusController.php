@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use App\Services\StatusService;
+use Illuminate\Support\Facades\Gate;
 
 class StatusController extends Controller
 {
@@ -23,6 +24,7 @@ class StatusController extends Controller
 
     public function create()
     {
+        Gate::authorize('manage-services');
         return view('status.create');
     }
 
@@ -37,12 +39,14 @@ class StatusController extends Controller
 
     public function edit($id)
     {
+        Gate::authorize('manage-services');
         $status = $this->service->find($id);
         return view('status.edit', compact('status'));
     }
 
     public function update(Request $request, $id)
     {
+        Gate::authorize('manage-services');
         $validated = $this->validateStatus($request, true);
 
         $this->service->update($id, $validated);
@@ -63,6 +67,7 @@ class StatusController extends Controller
 
     public function destroy($id)
     {
+        Gate::authorize('manage-services');
         try {
             $this->service->delete($id);
 

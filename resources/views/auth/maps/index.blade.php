@@ -87,6 +87,7 @@
                         <div class="row mt-3 gx-2">
                             <div class="col-md-6">
                                 <div class="card shadow-sm border-0 p-3 h-100">
+                                    @can('manage-routes')
                                     <form action="{{ route('admin.maps.store') }}" method="POST">
                                         @csrf
                                         <input type="text" name="route_name" class="form-control form-control-sm mb-2" placeholder="Route Name" required>
@@ -95,6 +96,9 @@
                                         <button type="submit" class="btn btn-primary btn-sm w-100 mb-2">Save Route</button>
                                         <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="location.reload()">Reset</button>
                                     </form>
+                                    @else
+                                    <p class="text-muted small mb-0">You can view the map and plan routes. Saving routes is restricted.</p>
+                                    @endcan
                                 </div>
                             </div>
                             <div class="col-md-6">

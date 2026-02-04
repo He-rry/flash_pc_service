@@ -7,6 +7,7 @@ use App\Services\ShopService;
 use App\Http\Requests\StoreShopRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class ShopController extends Controller
 {
@@ -31,6 +32,7 @@ class ShopController extends Controller
     }
     public function store(StoreShopRequest $request)
     {
+        Gate::authorize('manage-shops');
         try {
             $this->service->store($request->validated());
             return redirect()->back()->with('success', 'ဆိုင်အသစ်ကို အောင်မြင်စွာ ထည့်သွင်းပြီးပါပြီ။');
@@ -40,6 +42,7 @@ class ShopController extends Controller
     }
     public function update(Request $request, $id)
     {
+        Gate::authorize('manage-shops');
         try {
             $shop = $this->service->update($id, $request->only(['name', 'region', 'lat', 'lng']));
 
@@ -57,6 +60,7 @@ class ShopController extends Controller
     }
     public function destroy($id)
     {
+        Gate::authorize('delete-shops');
         try {
             $this->service->delete($id);
 
@@ -73,6 +77,7 @@ class ShopController extends Controller
     }
     public function import(Request $request)
     {
+        Gate::authorize('manage-shops');
         try {
             $result = $this->service->importShops($request->file('file'), 'skip');
 
@@ -90,11 +95,13 @@ class ShopController extends Controller
 
     public function export(Request $request)
     {
+        Gate::authorize('manage-shops');
         $filters = $request->only(['search', 'region', 'period', 'from_date', 'to_date']);
         return $this->service->exportShops($filters);
     }
     public function downloadDuplicates()
     {
+        Gate::authorize('manage-shops');
         $duplicates = session('duplicates', []);
 
         if (empty($duplicates)) {
@@ -108,6 +115,7 @@ class ShopController extends Controller
     }
     public function getLogs($id)
     {
+        Gate::authorize('view-logs');
         try {
             $logs = $this->service->getShopLogs($id);
             return response()->json($logs);

@@ -99,13 +99,15 @@
                                     <a href="{{ route('admin.maps.show', $route->id) }}" class="btn btn-sm btn-info text-white">
                                         <i class="fas fa-eye"></i> View
                                     </a>
+                                    @can('manage-routes')
                                     <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ $route->id }})">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    <form id="delete-form-{{ $route->id }}" action="{{ route('admin.maps.destroy', $route->id) }}" method="POST" style="display: none;">
+                                        @csrf @method('DELETE')
+                                    </form>
+                                    @endcan
                                 </div>
-                                <form id="delete-form-{{ $route->id }}" action="{{ route('admin.maps.destroy', $route->id) }}" method="POST" style="display: none;">
-                                    @csrf @method('DELETE')
-                                </form>
                             </td>
                         </tr>
                         @empty

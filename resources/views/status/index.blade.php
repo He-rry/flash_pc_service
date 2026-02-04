@@ -3,7 +3,9 @@
  @section('content')
  <div class="d-flex justify-content-between mb-3">
      <h4>Status Management</h4>
+     @can('manage-services')
      <a href="{{ route('admin.statuses.create') }}" class="btn btn-primary">Add New Status</a>
+     @endcan
  </div>
 
  <div class="card">
@@ -20,11 +22,13 @@
                  <tr>
                      <td>{{ $status->status_name }}</td>
                      <td>
+                         @can('manage-services')
                          <a href="{{ route('admin.statuses.edit', $status->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
                          <form action="{{ route('admin.statuses.destroy', $status->id) }}" method="POST" class="d-inline">
                              @csrf @method('DELETE')
                              <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
                          </form>
+                         @endcan
                      </td>
                  </tr>
                  @endforeach

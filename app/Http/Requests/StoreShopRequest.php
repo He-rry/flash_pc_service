@@ -8,8 +8,7 @@ class StoreShopRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        // Admin ဖြစ်မှ ခွင့်ပြုမယ်ဆိုတဲ့ logic မျိုး ဒီမှာ ထည့်နိုင်ပါတယ်
-        return true;
+        return $this->user()?->can('manage-shops') ?? false;
     }
 
     public function rules(): array

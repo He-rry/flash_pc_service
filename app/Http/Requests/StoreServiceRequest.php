@@ -8,7 +8,8 @@ class StoreServiceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        // Guest: customer report from public form. Logged-in admin: must have manage-services.
+        return ! $this->user() || $this->user()->can('manage-services');
     }
 
     public function rules(): array

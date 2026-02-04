@@ -23,6 +23,7 @@
     <div class="row">
         <div class="col-lg-8">
             <div class="custom-card p-4">
+                @can('manage-shops')
                 <h6 class="section-title mb-3"><i class="fas fa-plus-circle mr-2"></i>Register & Import Shops</h6>
                 <form action="{{ route('admin.shops.store') }}" method="POST" class="mb-4">
                     @csrf
@@ -98,6 +99,10 @@
                         </div>
                     </div>
                 </form>
+                @else
+                <h6 class="section-title mb-3"><i class="fas fa-store mr-2"></i>Shops (View Only)</h6>
+                <p class="text-muted small mb-0">Use filters on the right to search. You do not have permission to add, edit, or import/export shops.</p>
+                @endcan
             </div>
         </div>
         <div class="col-lg-4">
@@ -168,9 +173,11 @@
             <i class="fas fa-store mr-2 text-primary"></i>Shop Directory
         </h6>
 
+        @can('view-logs')
         <a href="{{ route('admin.logs.index') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
             <i class="fas fa-history mr-1"></i> View Activity Logs
         </a>
+        @endcan
     </div>
     <div class="table-container">
         <table class="table table-hover mb-0">
@@ -224,9 +231,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     window.appConfig = {
-        // API URL ကို သင်၏ API route နှင့် ကိုက်ညီအောင် ပြင်ပေးပါ
         apiUrl: "{{ url('/api/v1/shops') }}",
-        exportUrl: "{{ route('admin.shops.export') }}"
+        exportUrl: "{{ route('admin.shops.export') }}",
+        canManageShops: @json(auth()->user()->can('manage-shops')),
+        canViewLogs: @json(auth()->user()->can('view-logs'))
     };
 </script>
 @if(session('warning'))

@@ -8,7 +8,7 @@ class StoreRouteRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        return $this->user()?->can('manage-routes') ?? false;
     }
 
     public function rules(): array

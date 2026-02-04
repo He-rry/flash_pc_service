@@ -37,6 +37,7 @@
                 </form>
 
                 <hr>
+                @can('manage-shops')
                 <div class="d-flex justify-content-between">
                     <button type="button" class="btn btn-outline-danger" onclick="deleteShop()">
                         <i class="fas fa-trash-alt mr-1"></i> Delete
@@ -45,6 +46,7 @@
                         <i class="fas fa-save mr-1"></i> Save Changes
                     </button>
                 </div>
+                @endcan
             </div>
         </div>
     </div>

@@ -21,6 +21,13 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+            $user = Auth::user();
+            if ($user->isLogManager()) {
+                return redirect()->route('admin.logs.index');
+            }
+            if ($user->isEditor()) {
+                return redirect()->route('admin.shops.create');
+            }
             return redirect()->route('admin.services.index');
         }
 

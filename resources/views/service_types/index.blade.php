@@ -3,7 +3,9 @@
 @section('content')
 <div class="d-flex justify-content-between mb-3">
     <h4>Service Types Management</h4>
+    @can('manage-services')
     <a href="{{ route('admin.service-types.create') }}" class="btn btn-primary">Add New Service Type</a>
+    @endcan
 </div>
 
 <div class="card">
@@ -20,12 +22,14 @@
                 <tr>
                     <td>{{ $type->service_name }}</td>
                     <td>
+                        @can('manage-services')
                         <a href="{{ route('admin.service-types.edit', $type->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
                         <form action="{{ route('admin.service-types.destroy', $type->id) }}" method="POST" class="d-inline">
                             @csrf 
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
                         </form>
+                        @endcan
                     </td>
                 </tr>
                 @endforeach

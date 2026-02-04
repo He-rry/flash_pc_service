@@ -4,6 +4,7 @@ use App\Services\ServiceService;
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Requests\UpdateServiceRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class ServiceController extends Controller
 {
@@ -22,18 +23,21 @@ class ServiceController extends Controller
 
     public function create()
     {
+        Gate::authorize('manage-services');
         $data = $this->service->getInitialData();
         return view('services.create', ['types' => $data['types']]);
     }
 
     public function store(StoreServiceRequest $request)
     {
+        Gate::authorize('manage-services');
         $this->service->createReport($request->validated());
         return redirect()->route('admin.services.index')->with('success', 'Service created successfully!');
     }
 
     public function edit($id)
     {
+        Gate::authorize('manage-services');
         $service = $this->service->find($id);
         $data = $this->service->getInitialData();
 
@@ -46,12 +50,14 @@ class ServiceController extends Controller
 
     public function update(UpdateServiceRequest $request, $id)
     {
+        Gate::authorize('manage-services');
         $this->service->updateRecord($id, $request->validated());
         return redirect()->route('admin.services.index')->with('success', 'Updated!');
     }
 
     public function destroy($id)
     {
+        Gate::authorize('manage-services');
         $this->service->deleteRecord($id);
         return redirect()->route('admin.services.index')->with('success', 'Deleted!');
     }

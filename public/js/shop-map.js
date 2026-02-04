@@ -155,17 +155,24 @@ function enableMapPicker() {
 
 function renderTable(shops) {
     const tbody = document.getElementById('shopTableBody');
+    const canManage = (window.appConfig && window.appConfig.canManageShops) !== false;
+    const canViewLogs = (window.appConfig && window.appConfig.canViewLogs) !== false;
     tbody.innerHTML = shops.map(shop => {
         const adminName = shop.admin ? shop.admin.name : 'System';
         const shopString = JSON.stringify(shop).replace(/"/g, '&quot;');
+        const nameCell = canManage
+            ? `<a href="javascript:void(0)" class="text-dark font-weight-bold text-decoration-none fw-bold" onclick="openEditModal(${shopString})">${shop.name}</a>`
+            : `<span class="text-dark font-weight-bold">${shop.name}</span>`;
+        const editBtn = canManage
+            ? `<button class="btn btn-sm btn-light ml-2 shadow-sm border" onclick="openEditModal(${shopString})"><i class="fas fa-edit text-warning"></i></button>`
+            : '';
+        const logsBtn = canViewLogs
+            ? `<button class="btn btn-sm btn-light ml-1 shadow-sm border" onclick="showShopLogs(${shop.id}, '${shop.name.replace(/'/g, "\\'")}')"><i class="fas fa-history text-info"></i></button>`
+            : '';
 
         return `
             <tr>
-                <td class="pl-4">
-                    <a href="javascript:void(0)" class="text-dark font-weight-bold text-decoration-none fw-bold" onclick="openEditModal(${shopString})">
-                        ${shop.name}
-                    </a>
-                </td>
+                <td class="pl-4">${nameCell}</td>
                 <td>${parseFloat(shop.lat).toFixed(5)}, ${parseFloat(shop.lng).toFixed(5)}</td>
                 <td class="text-center"><span class="badge badge-light border">${shop.region || '-'}</span></td>
                 <td class="text-center">
@@ -175,12 +182,8 @@ function renderTable(shops) {
                 </td>
                 <td class="text-right pr-4 small text-muted">
                     ${new Date(shop.created_at).toLocaleDateString('en-GB')}
-                    <button class="btn btn-sm btn-light ml-2 shadow-sm border" onclick="openEditModal(${shopString})">
-                        <i class="fas fa-edit text-warning"></i>
-                    </button>
-                    <button class="btn btn-sm btn-light ml-1 shadow-sm border" onclick="showShopLogs(${shop.id}, '${shop.name.replace(/'/g, "\\'")}')">
-                      <i class="fas fa-history text-info"></i>
-                    </button>
+                    ${editBtn}
+                    ${logsBtn}
                 </td>
             </tr>`;
     }).join('');

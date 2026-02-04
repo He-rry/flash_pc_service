@@ -6,6 +6,7 @@ use App\Services\RouteService;
 use App\Http\Requests\StoreShopRequest;
 use App\Http\Requests\StoreRouteRequest;
 use App\Services\ShopService;
+use Illuminate\Support\Facades\Gate;
 
 class RouteController extends Controller
 {
@@ -32,6 +33,7 @@ class RouteController extends Controller
     }
     public function store(StoreRouteRequest $request)
     {
+        Gate::authorize('manage-routes');
         $data = $request->validated();
 
         $this->routeService->create($data + ['waypoints' => $request->waypoints]);
@@ -41,6 +43,7 @@ class RouteController extends Controller
 
     public function destroy($id)
     {
+        Gate::authorize('manage-routes');
         $this->routeService->delete($id);
 
         return redirect()->back()->with('success', 'Route deleted!');

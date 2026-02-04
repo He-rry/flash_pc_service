@@ -3,7 +3,9 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>Service Records</h3>
+    @can('manage-services')
     <a href="{{route('admin.services.create')}}" class="btn btn-primary">Add New Service</a>
+    @endcan
 </div>
 
 <div class="card shadow-sm">
@@ -40,6 +42,7 @@
                             data-bs-target="#viewModal{{ $service->id }}">
                             View Info
                         </button>
+                        @can('manage-services')
                         <a href="{{ route('admin.services.edit', $service->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
                         <form action="{{ route('admin.services.destroy', $service->id) }}" method="POST" style="display:inline-block;">
                             @csrf
@@ -48,6 +51,7 @@
                                 Delete
                             </button>
                         </form>
+                        @endcan
                     </td>
                 </tr>
 
@@ -99,7 +103,9 @@
                             </div>
                             <div class="modal-footer bg-light">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                @can('manage-services')
                                 <a href="{{ route('admin.services.edit', $service->id) }}" class="btn btn-primary">Edit Service</a>
+                                @endcan
                             </div>
                         </div>
                     </div>

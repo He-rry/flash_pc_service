@@ -39,11 +39,13 @@ class DatabaseSeeder extends Seeder
             'name' => 'System',
             'email' => 'admin@gmail.com',
             'password' => bcrypt('password123'),
+            'role' => 'super_admin'
         ]);
         \App\Models\User::factory()->create([
             'name' => 'Admin1',
             'email' => 'admin1@test.com',
             'password' => bcrypt('password123'),
+            'role' => 'manager'
         ]);
         \App\Models\User::factory()->create([
             'name' => 'Admin2',

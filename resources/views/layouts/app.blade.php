@@ -35,6 +35,7 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
+                    @unless(auth()->user()->isLogManager() ?? false)
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.services.index') }}">Services</a>
                     </li>
@@ -54,11 +55,21 @@
                             <i class="fas fa-list"></i> View Saved Routes
                         </a>
                     </li>
+                    @can('manage-shops')
                     <li class="nav-item">
                         <a href="{{ route('admin.shops.create') }}" class="nav-link">
                             <i class="fas fa-plus-circle"></i> Add New Shop
                         </a>
                     </li>
+                    @endcan
+                    @endunless
+                    @can('view-logs')
+                    <li class="nav-item">
+                        <a href="{{ route('admin.logs.index') }}" class="nav-link">
+                            <i class="fas fa-history"></i> Activity Logs
+                        </a>
+                    </li>
+                    @endcan
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     @auth

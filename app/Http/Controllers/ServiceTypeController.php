@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
 use App\Services\ServiceTypeService;
+use Illuminate\Support\Facades\Gate;
 
 class ServiceTypeController extends Controller
 {
@@ -23,6 +24,7 @@ class ServiceTypeController extends Controller
 
     public function create()
     {
+        Gate::authorize('manage-services');
         return view('admin.service_types.create');
     }
 
@@ -37,12 +39,14 @@ class ServiceTypeController extends Controller
 
     public function edit($id)
     {
+        Gate::authorize('manage-services');
         $type = $this->service->find($id);
         return view('service_types.edit', compact('type'));
     }
 
     public function update(Request $request, $id)
     {
+        Gate::authorize('manage-services');
         $validated = $this->validateServiceType($request, true);
 
         $this->service->update($id, $validated);
@@ -63,6 +67,7 @@ class ServiceTypeController extends Controller
 
     public function destroy($id)
     {
+        Gate::authorize('manage-services');
         try {
             $this->service->delete($id);
 

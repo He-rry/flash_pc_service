@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Traits\ApiResponse;
 use App\Services\RouteService;
 use App\Http\Requests\StoreRouteRequest;
+use Illuminate\Support\Facades\Gate;
 
 class RouteController extends Controller
 {
@@ -36,6 +37,7 @@ class RouteController extends Controller
 
     public function store(StoreRouteRequest $request)
     {
+        Gate::authorize('manage-routes');
         $payload = $request->validated();
 
         $route = $this->service->create($payload + ['waypoints' => $request->waypoints ?? null]);
@@ -45,6 +47,7 @@ class RouteController extends Controller
 
     public function destroy($id)
     {
+        Gate::authorize('manage-routes');
         $deleted = $this->service->delete($id);
 
         if (! $deleted) {
