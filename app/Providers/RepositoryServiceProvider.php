@@ -37,6 +37,7 @@ class RepositoryServiceProvider extends ServiceProvider
             \App\Interfaces\RoutePlannerRepositoryInterface::class,
             \App\Repositories\RoutePlannerRepository::class
         );
+        
     }
 
     public function boot(): void

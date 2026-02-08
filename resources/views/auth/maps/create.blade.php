@@ -21,9 +21,14 @@
 
 <div class="dashboard-container">
     <div class="row">
+        @can('view-shop-management')
         <div class="col-lg-8">
             <div class="custom-card p-4">
+<<<<<<< HEAD
                 @can('manage-shops')
+=======
+                @can ('shop-create')
+>>>>>>> b226a99 (user account create and permissions added)
                 <h6 class="section-title mb-3"><i class="fas fa-plus-circle mr-2"></i>Register & Import Shops</h6>
                 <form action="{{ route('admin.shops.store') }}" method="POST" class="mb-4">
                     @csrf
@@ -75,9 +80,10 @@
                         </div>
                     </div>
                 </form>
+                @endcan
 
                 <hr class="my-4">
-
+                @can ('shop-import')
                 <form action="{{ route('admin.shops.import') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="row align-items-center">
@@ -92,11 +98,14 @@
                                 <i class="fas fa-upload mr-1"></i> IMPORT
                             </button>
                         </div>
+                        @endcan
+                        @can ('shop-export')
                         <div class="col-md-3 px-1">
                             <a href="{{ route('admin.shops.export') }}" id="exportBtn" class="btn btn-success btn-sm btn-block font-weight-bold shadow-sm">
                                 <i class="fas fa-file-excel mr-1"></i> EXPORT RESULT
                             </a>
                         </div>
+                        @endcan
                     </div>
                 </form>
                 @else
@@ -105,6 +114,7 @@
                 @endcan
             </div>
         </div>
+        @endcan
         <div class="col-lg-4">
             <div class="custom-card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -183,37 +193,77 @@
         <table class="table table-hover mb-0">
             <thead>
                 <tr>
-                    <th class="pl-4"><i class="fas fa-store mr-1 text-muted"></i> Shop Name</th>
-                    <th><i class="fas fa-map-marker-alt mr-1 text-muted"></i> Coordinates</th>
-                    <th class="text-center"><i class="fas fa-globe mr-1 text-muted"></i> Region</th>
-                    <th class="text-center"><i class="fas fa-user-shield mr-1 text-muted"></i> Added By</th>
-                    <th class="text-right pr-4"><i class="fas fa-calendar-alt mr-1 text-muted"></i> Registered At</th>
+                    <th class="pl-4">Shop Name</th>
+                    <th>Coordinates</th>
+                    <th class="text-center">Region</th>
+                    @can('view-logs')
+                    <th class="text-center">Added By</th>
+                    @endcan
+                    <th class="text-right">Registered At</th>
+                    @canany(['shop-edit', 'view-logs'])
+                    <th class="text-right pr-4">Actions</th>
+                    @endcanany
                 </tr>
             </thead>
             <tbody id="shopTableBody">
                 @foreach($shops as $shop)
                 <tr>
-                    <td class="pl-4"><strong>{{ $shop->name }}</strong></td>
+                    {{-- Name --}}
+                    <td class="pl-4">
+                        @can('shop-edit')
+                        <a href="javascript:void(0)" class="text-dark font-weight-bold text-decoration-none"
+                            onclick='openEditModal(@json($shop))'>
+                            {{ $shop->name }}
+                        </a>
+                        @else
+                        <strong>{{ $shop->name }}</strong>
+                        @endcan
+                    </td>
+
+                    {{-- Coordinates --}}
                     <td>
                         <span class="text-monospace small bg-light px-2 py-1 rounded">
                             {{ number_format($shop->lat, 5) }}, {{ number_format($shop->lng, 5) }}
                         </span>
                     </td>
+
+                    {{-- Region --}}
                     <td class="text-center">
-                        <span class="badge badge-light border font-weight-normal">{{ $shop->region }}</span>
+                        <span class="badge badge-light border">{{ $shop->region ?? '-' }}</span>
                     </td>
+
+                    {{-- Added By --}}
+                    @can('view-logs')
                     <td class="text-center">
-                        @if($shop->admin)
                         <span class="badge badge-info-soft text-info px-2 py-1" style="background-color: #e0f2ff;">
-                            <i class="fas fa-user-check mr-1 small"></i>{{ $shop->admin->name }}
+                            <i class="fas fa-user-check mr-1 small"></i>{{ $shop->admin->name ?? 'System' }}
                         </span>
-                        @else
-                        <span class="text-muted small">System</span>
-                        @endif
                     </td>
-                    <td class="text-right pr-4 small text-muted">
+                    @endcan
+
+                    {{-- Registered Date --}}
+                    <td class="text-right small text-muted">
                         {{ $shop->created_at->format('d/m/Y') }}
                     </td>
+
+                    {{-- Actions Buttons --}}
+                    @canany(['shop-edit', 'view-logs'])
+                    <td class="text-right pr-4">
+                        @can('shop-edit')
+                        <button class="btn btn-sm btn-light shadow-sm border mr-1"
+                            onclick='openEditModal(@json($shop))'>
+                            <i class="fas fa-edit text-warning"></i>
+                        </button>
+                        @endcan
+
+                        @can('view-logs')
+                        <button class="btn btn-sm btn-light shadow-sm border"
+                            onclick="showShopLogs({{$shop->id}}, '{{ addslashes($shop->name) }}')">
+                            <i class="fas fa-history text-info"></i>
+                        </button>
+                        @endcan
+                    </td>
+                    @endcanany
                 </tr>
                 @endforeach
             </tbody>
@@ -233,8 +283,7 @@
     window.appConfig = {
         apiUrl: "{{ url('/api/v1/shops') }}",
         exportUrl: "{{ route('admin.shops.export') }}",
-        canManageShops: @json(auth()->user()->can('manage-shops')),
-        canViewLogs: @json(auth()->user()->can('view-logs'))
+        permissions: @json($permissions),
     };
 </script>
 @if(session('warning'))

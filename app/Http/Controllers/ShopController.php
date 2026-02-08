@@ -8,6 +8,7 @@ use App\Http\Requests\StoreShopRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Spatie\Permission\Models\Permission;
 
 class ShopController extends Controller
 {
@@ -30,8 +31,8 @@ class ShopController extends Controller
         $shops->appends($request->all());
 
         $regions = Shop::whereNotNull('region')->distinct()->pluck('region');
-
-        return view('auth.maps.create', compact('shops', 'regions'));
+        $permissions = Auth::user()->getAllPermissions()->pluck('name')->toArray();
+        return view('auth.maps.create', compact('shops', 'regions', 'permissions'));
     }
     public function store(StoreShopRequest $request)
     {

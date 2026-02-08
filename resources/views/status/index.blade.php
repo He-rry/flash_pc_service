@@ -3,7 +3,7 @@
  @section('content')
  <div class="d-flex justify-content-between mb-3">
      <h4>Status Management</h4>
-     @can('manage-services')
+     @can('add-status')
      <a href="{{ route('admin.statuses.create') }}" class="btn btn-primary">Add New Status</a>
      @endcan
  </div>
@@ -22,13 +22,16 @@
                  <tr>
                      <td>{{ $status->status_name }}</td>
                      <td>
-                         @can('manage-services')
-                         <a href="{{ route('admin.statuses.edit', $status->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
-                         <form action="{{ route('admin.statuses.destroy', $status->id) }}" method="POST" class="d-inline">
-                             @csrf @method('DELETE')
-                             <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                         </form>
-                         @endcan
+                         <<<<<<< HEAD
+                             @can('manage-services')=======@can('edit-status')>>>>>>> b226a99 (user account create and permissions added)
+                             <a href="{{ route('admin.statuses.edit', $status->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
+                             @endcan
+                             @can('delete-status')
+                             <form action="{{ route('admin.statuses.destroy', $status->id) }}" method="POST" class="d-inline">
+                                 @csrf @method('DELETE')
+                                 <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                             </form>
+                             @endcan
                      </td>
                  </tr>
                  @endforeach

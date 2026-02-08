@@ -6,27 +6,28 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-    public function up()
+    public function up(): void
     {
-        Schema::table('shops', function (Blueprint $table) {
-            $table->foreignId('added_by')->nullable()->constrained('users')->onDelete('set null');
-        });
         Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
+            // ဘယ်သူလုပ်တာလဲ
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-           $table->foreignId('shop_id')->nullable()->constrained('shops')->onDelete('set null');
-            $table->string('action'); // 'ADD', 'IMPORT', 'EXPORT'
-            $table->string('module')->default('SHOPS');
-            $table->text('description');
+
+            // ဘယ်ဆိုင်မှာ လုပ်တာလဲ (Nullable ဖြစ်ရမယ်၊ User ဆောက်တဲ့အခါ Shop ID မရှိလို့ပါ)
+            $table->foreignId('shop_id')->nullable()->constrained('shops')->onDelete('set null');
+
+            $table->string('action'); // ADD, EDIT, DELETE, IMPORT
+            $table->string('module'); // SHOPS, USERS, ROLES
+            $table->text('description'); // စာသားအရှည်
+
+            // JSON Column - ဒါက Frontend (API) အတွက် အသက်ပဲ!
+            $table->json('changes')->nullable();
+
+            $table->string('ip_address')->nullable();
             $table->timestamps();
         });
     }
-    /**
-     * Reverse the migrations.
-     */
+
     public function down(): void
     {
         Schema::dropIfExists('activity_logs');

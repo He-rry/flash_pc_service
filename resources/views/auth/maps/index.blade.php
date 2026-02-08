@@ -244,7 +244,7 @@
     }
 
     function loadShops() {
-        fetch("{{ route('shops.index') }}")
+        fetch("{{ route('api.shops.index') }}")
             .then(response => response.json())
             .then(payload => {
                 allShops = payload.all_filtered || payload.data || [];

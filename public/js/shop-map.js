@@ -1,5 +1,6 @@
 let map, markerLayer, tempMarker = null;
 let editMarker = null;
+let permissions = [];
 
 const isLeafletReady = () => typeof L !== 'undefined';
 
@@ -15,8 +16,12 @@ document.addEventListener('DOMContentLoaded', function () {
         // Map click for New Shop
         map.on('click', (e) => {
             const { lat, lng } = e.latlng;
-            document.getElementById('form_lat').value = lat.toFixed(6);
-            document.getElementById('form_lng').value = lng.toFixed(6);
+            const latField = document.getElementById('form_lat');
+            const lngField = document.getElementById('form_lng');
+
+            if (latField) latField.value = lat.toFixed(6);
+            if (lngField) lngField.value = lng.toFixed(6);
+
             if (tempMarker) map.removeLayer(tempMarker);
             tempMarker = L.marker([lat, lng]).addTo(map).bindPopup("Selected Location").openPopup();
         });
@@ -67,35 +72,46 @@ async function fetchData(page = 1) {
     const periodVal = periodElement ? periodElement.value : 'all';
 
     const params = new URLSearchParams({
-        search: searchVal, region: regionVal, period: periodVal,
-        from_date: fromDate, to_date: toDate, page: page
+        search: searchVal,
+        region: regionVal,
+        period: periodVal,
+        from_date: fromDate,
+        to_date: toDate,
+        page: page
     });
 
     const exportBtn = document.getElementById('exportBtn');
-    if (exportBtn) exportBtn.href = `${window.appConfig.exportUrl}?${params.toString()}`;
+    if (exportBtn) {
+        exportBtn.href = `${window.appConfig.exportUrl}?${params.toString()}`;
+    }
 
     try {
-        const response = await fetch(`${window.appConfig.apiUrl}?${params.toString()}`);
+        const response = await fetch(`${window.appConfig.apiUrl}?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
         const result = await response.json();
         const total = result.total || 0;
 
-        // Update Count Badge
         const countBadge = document.getElementById('filterCountBadge');
         if (countBadge) {
             countBadge.innerText = `${total} Shops`;
             countBadge.className = `badge shadow-sm ${total === 0 ? 'badge-danger' : 'badge-primary'}`;
         }
 
-        // Export Button State
-        if (exportBtn) {
-            exportBtn.classList.toggle('disabled', total === 0);
-            exportBtn.style.pointerEvents = total === 0 ? 'none' : 'auto';
-            exportBtn.style.opacity = total === 0 ? '0.6' : '1';
-        }
-
         const tbody = document.getElementById('shopTableBody');
         if (total === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-danger font-weight-bold"><i class="fas fa-exclamation-circle mr-2"></i>ကိုက်ညီသော ဒေတာ မရှိပါ။</td></tr>';
+            const colCount = document.querySelectorAll('thead tr th').length;
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="${colCount}" class="text-center py-5 text-danger font-weight-bold">
+                        <i class="fas fa-exclamation-circle mr-2"></i>ကိုက်ညီသော ဒေတာ မရှိပါ။
+                    </td>
+                </tr>`;
         } else {
             renderTable(result.data || []);
         }
@@ -103,9 +119,87 @@ async function fetchData(page = 1) {
         renderMarkers(result.all_filtered || result.data || []);
         renderPagination(result);
 
-    } catch (e) { console.error('Fetch Error:', e); }
+    } catch (e) {
+        console.error('Fetch Error:', e);
+        const tbody = document.getElementById('shopTableBody');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-danger">စနစ်အတွင်း ချို့ယွင်းချက် ရှိနေပါသည်။</td></tr>`;
+    }
 }
 
+function renderTable(shops) {
+    const tbody = document.getElementById('shopTableBody');
+    if (!tbody) return;
+
+    // Permissions (Single Source of Truth from appConfig)
+    const perms = window.appConfig.permissions || [];
+    const canViewLogs = perms.includes('view-logs');
+    const canEdit = perms.includes('shop-edit');
+    const showActionCol = canEdit || canViewLogs;
+
+    tbody.innerHTML = shops.map(shop => {
+        const adminName = shop.admin ? shop.admin.name : 'System';
+        const shopString = JSON.stringify(shop).replace(/"/g, '&quot;').replace(/'/g, "\\'");
+        const createdDate = new Date(shop.created_at).toLocaleDateString('en-GB');
+
+        let rowHtml = `<tr>`;
+
+        // Col 1: Name (Clickable if canEdit)
+        rowHtml += `
+            <td class="pl-4">
+                <a href="javascript:void(0)" class="text-dark font-weight-bold text-decoration-none" 
+                   ${canEdit ? `onclick="openEditModal(${shopString})"` : ''}>
+                    ${shop.name}
+                </a>
+            </td>`;
+
+        // Col 2: Coordinates
+        rowHtml += `
+            <td>
+                <span class="text-monospace small bg-light px-2 py-1 rounded border">
+                    ${parseFloat(shop.lat).toFixed(5)}, ${parseFloat(shop.lng).toFixed(5)}
+                </span>
+            </td>`;
+
+        // Col 3: Region
+        rowHtml += `<td class="text-center"><span class="badge badge-light border">${shop.region || '-'}</span></td>`;
+
+        // Col 4: Added By (Visible if canViewLogs)
+        if (canViewLogs) {
+            rowHtml += `
+                <td class="text-center">
+                    <span class="badge badge-info-soft text-info px-2 py-1" style="background-color: #e0f2ff;">
+                        <i class="fas fa-user-check mr-1 small"></i>${adminName}
+                    </span>
+                </td>`;
+        }
+
+        // Col 5: Registered At
+        rowHtml += `<td class="text-right small text-muted">${createdDate}</td>`;
+
+        // Col 6: Actions
+        if (showActionCol) {
+            rowHtml += `<td class="text-right pr-4">`;
+            if (canEdit) {
+                rowHtml += `
+                    <button class="btn btn-sm btn-light shadow-sm border mr-1" onclick="openEditModal(${shopString})">
+                        <i class="fas fa-edit text-warning"></i>
+                    </button>`;
+            }
+            if (canViewLogs) {
+                rowHtml += `
+                    <button class="btn btn-sm btn-light shadow-sm border" onclick="showShopLogs(${shop.id}, '${shop.name.replace(/'/g, "\\'")}')">
+                        <i class="fas fa-history text-info"></i>
+                    </button>`;
+            }
+            rowHtml += `</td>`;
+        }
+
+        rowHtml += `</tr>`;
+        return rowHtml;
+    }).join('');
+}
+
+// Map Picker, Markers, Pagination, Modal & Logs logic (Remains the same but cleaned)
 function enableMapPicker() {
     const latInput = document.getElementById('edit_lat');
     const lngInput = document.getElementById('edit_lng');
@@ -113,7 +207,7 @@ function enableMapPicker() {
     const pickerHint = document.getElementById('picker-hint');
     const lat = parseFloat(latInput.value) || 16.8331;
     const lng = parseFloat(lngInput.value) || 96.1427;
-    const mapElement = document.getElementById('map');
+
     modal.modal('hide');
     pickerHint?.classList.remove('d-none');
 
@@ -141,52 +235,9 @@ function enableMapPicker() {
 
     map.on('click', onMapClick);
     editMarker.on('dragend', (e) => finalizeSelection(e.target.getLatLng()));
-    if (mapElement) {
-        mapElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-        });
-    }
-    map.flyTo([lat, lng], 18, {
-        animate: true,
-        duration: 1.5,
-    });
-}
 
-function renderTable(shops) {
-    const tbody = document.getElementById('shopTableBody');
-    const canManage = (window.appConfig && window.appConfig.canManageShops) !== false;
-    const canViewLogs = (window.appConfig && window.appConfig.canViewLogs) !== false;
-    tbody.innerHTML = shops.map(shop => {
-        const adminName = shop.admin ? shop.admin.name : 'System';
-        const shopString = JSON.stringify(shop).replace(/"/g, '&quot;');
-        const nameCell = canManage
-            ? `<a href="javascript:void(0)" class="text-dark font-weight-bold text-decoration-none fw-bold" onclick="openEditModal(${shopString})">${shop.name}</a>`
-            : `<span class="text-dark font-weight-bold">${shop.name}</span>`;
-        const editBtn = canManage
-            ? `<button class="btn btn-sm btn-light ml-2 shadow-sm border" onclick="openEditModal(${shopString})"><i class="fas fa-edit text-warning"></i></button>`
-            : '';
-        const logsBtn = canViewLogs
-            ? `<button class="btn btn-sm btn-light ml-1 shadow-sm border" onclick="showShopLogs(${shop.id}, '${shop.name.replace(/'/g, "\\'")}')"><i class="fas fa-history text-info"></i></button>`
-            : '';
-
-        return `
-            <tr>
-                <td class="pl-4">${nameCell}</td>
-                <td>${parseFloat(shop.lat).toFixed(5)}, ${parseFloat(shop.lng).toFixed(5)}</td>
-                <td class="text-center"><span class="badge badge-light border">${shop.region || '-'}</span></td>
-                <td class="text-center">
-                    <span class="badge badge-info-soft text-info px-2 py-1" style="background-color: #e0f2ff;">
-                        <i class="fas fa-user-check mr-1 small"></i>${adminName}
-                    </span>
-                </td>
-                <td class="text-right pr-4 small text-muted">
-                    ${new Date(shop.created_at).toLocaleDateString('en-GB')}
-                    ${editBtn}
-                    ${logsBtn}
-                </td>
-            </tr>`;
-    }).join('');
+    document.getElementById('map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    map.flyTo([lat, lng], 18, { animate: true, duration: 1.5 });
 }
 
 function renderMarkers(shops) {
@@ -249,14 +300,7 @@ async function updateShop() {
 
         if (response.ok) {
             $('#singleShopModal').modal('hide');
-            if (tempMarker) {
-                map.removeLayer(tempMarker);
-                tempMarker = null;
-            }
-            const latField = document.getElementById('form_lat');
-            const lngField = document.getElementById('form_lng');
-            if (latField) latField.value = '';
-            if (lngField) lngField.value = '';
+            if (tempMarker) { map.removeLayer(tempMarker); tempMarker = null; }
             fetchData();
             showToast('ဆိုင်အချက်အလက် ပြင်ဆင်မှု အောင်မြင်ပါသည်', 'success');
         } else {
@@ -295,17 +339,12 @@ function showToast(message, type = 'success') {
     toastElement.toast({ delay: 1500 }).toast('show');
 }
 
-
 async function showShopLogs(shopId, shopName) {
-    const titleElem = document.getElementById('logModalTitle');
     const tbody = document.getElementById('shopLogTableBody');
-    if (titleElem) {
-        titleElem.innerText = `${shopName} - Logs`;
-    }
-    if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> ခဏစောင့်ပါ...</td></tr>';
-    }
+    document.getElementById('logModalTitle').innerText = `${shopName} - Logs`;
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div> ခဏစောင့်ပါ...</td></tr>';
     $('#shopLogModal').modal('show');
+
     try {
         const response = await fetch(`/admin/shops/${shopId}/logs`);
         const logs = await response.json();
@@ -316,13 +355,7 @@ async function showShopLogs(shopId, shopName) {
         }
 
         tbody.innerHTML = logs.map(log => {
-            const badgeClass = {
-                'ADD': 'bg-success',
-                'UPDATE': 'bg-warning',
-                'DELETE': 'bg-danger',
-                'IMPORT': 'bg-info'
-            }[log.action] || 'bg-light';
-
+            const badgeClass = { 'ADD': 'bg-success', 'UPDATE': 'bg-warning', 'DELETE': 'bg-danger', 'IMPORT': 'bg-info' }[log.action] || 'bg-light';
             const adminInitial = log.user ? log.user.name.charAt(0) : 'S';
 
             return `
@@ -343,7 +376,6 @@ async function showShopLogs(shopId, shopName) {
                     <td class="small text-wrap" style="max-width: 250px;">${log.description}</td>
                 </tr>`;
         }).join('');
-
     } catch (e) {
         tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-danger">Error fetching logs.</td></tr>';
     }

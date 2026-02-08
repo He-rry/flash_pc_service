@@ -37,19 +37,24 @@
                     </td>
                     <td>{{ $service->created_at->format('d-M-Y') }}</td>
                     <td>
+                        @can('view-services-info')
                         <button type="button" class="btn btn-sm btn-info text-white"
                             data-bs-toggle="modal"
                             data-bs-target="#viewModal{{ $service->id }}">
                             View Info
                         </button>
-                        @can('manage-services')
+                        @endcan
+                        @can('edit-services')
                         <a href="{{ route('admin.services.edit', $service->id) }}" class="btn btn-sm btn-outline-primary">Edit</a>
+                        @endcan
                         <form action="{{ route('admin.services.destroy', $service->id) }}" method="POST" style="display:inline-block;">
                             @csrf
                             @method('DELETE')
+                            @can('delete-services')
                             <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this record?')">
                                 Delete
                             </button>
+                            @endcan
                         </form>
                         @endcan
                     </td>

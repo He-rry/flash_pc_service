@@ -15,6 +15,7 @@ return new class extends Migration
             $table->decimal('lng', 11, 8); // Longitude အတွက်
             $table->string('region')->nullable();
             $table->string('address')->nullable()->unique();
+            $table->foreignId('added_by')->nullable()->constrained('users')->onDelete('cascade');
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->unique(['lat', 'lng']);

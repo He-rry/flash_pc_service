@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between mb-3">
     <h4>Service Types Management</h4>
-    @can('manage-services')
+    @can('add-service-type')
     <a href="{{ route('admin.service-types.create') }}" class="btn btn-primary">Add New Service Type</a>
     @endcan
 </div>
@@ -22,10 +22,16 @@
                 <tr>
                     <td>{{ $type->service_name }}</td>
                     <td>
+<<<<<<< HEAD
                         @can('manage-services')
+=======
+                        @can('edit-service-type')
+>>>>>>> b226a99 (user account create and permissions added)
                         <a href="{{ route('admin.service-types.edit', $type->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
+                        @endcan
+                        @can('delete-service-type')
                         <form action="{{ route('admin.service-types.destroy', $type->id) }}" method="POST" class="d-inline">
-                            @csrf 
+                            @csrf
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
                         </form>
