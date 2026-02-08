@@ -7,54 +7,79 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use App\Repositories\UserRepository;
+use App\Services\UserService; // UserService class ရှိရန်လိုအပ်ပါသည်
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function __construct()
+    protected $userRepo;
+    protected $userService;
+
+    public function __construct(UserRepository $userRepo, UserService $userService)
     {
-        // Use Gate check so `super-admin` Gate::before still applies
+        $this->userRepo = $userRepo;
+        $this->userService = $userService;
+        
+        // Security အတွက် manage-users permission ရှိသူသာ ဝင်ခွင့်ပြုမည်
         $this->middleware('can:manage-users');
     }
 
     public function index()
     {
-        $users = User::paginate(15);
+        // Pagination နှင့်အတူ roles ပါ တစ်ခါတည်း load လုပ်ထားပါသည်
+        $users = User::with('roles')->latest()->paginate(15);
         return view('admin.users.index', compact('users'));
+    }
+
+    /**
+     * Permission Matrix Logic
+     * UI တွင် Module အလိုက် (ဥပမာ- Shops, Routes) ခွဲခြားပြသရန်အတွက်ဖြစ်သည်
+     */
+    private function getPermissionMatrix()
+    {
+        $modules = [
+            'shops'    => 'Shops',
+            'routes'   => 'Routes',
+            'logs'     => 'Logs',
+            'services' => 'Services',
+            'users'    => 'Users',
+            'settings' => 'Settings'
+        ];
+        
+        $actions = ['view', 'create', 'update', 'delete', 'import', 'export'];
+
+        $matrix = [];
+        foreach ($modules as $key => $label) {
+            foreach ($actions as $act) {
+                $permName = "$act-$key";
+                
+                // DB ထဲမှာ ရှိပြီးသား Permission ဖြစ်မှသာ Matrix ထဲထည့်မည်
+                if (Permission::where('name', $permName)->exists()) {
+                    $matrix[$label][] = [
+                        'name' => $permName, 
+                        'label' => ucfirst($act)
+                    ];
+                }
+            }
+        }
+        return $matrix;
     }
 
     public function create()
     {
         $roles = Role::all();
+        $matrix = $this->getPermissionMatrix();
+        $permissions = Permission::all();
 
-        // Define modules and actions for permission matrix
-        $modules = [
-            'shops' => 'Shops',
-            'routes' => 'Routes',
-            'logs' => 'Logs',
-            'services' => 'Services',
-            'users' => 'Users'
-        ];
-
-        $actions = ['view', 'create', 'update', 'delete', 'import', 'export'];
-
-        // Ensure permissions exist in DB for matrix (non-destructive)
-        $matrix = [];
-        foreach ($modules as $key => $label) {
-            foreach ($actions as $act) {
-                $permName = "$act-$key";
-                Permission::firstOrCreate(['name' => $permName]);
-                $matrix[$key][] = ['name' => $permName, 'label' => ucfirst($act)];
-            }
-        }
-
-        // Prepare role -> permissions map for client-side convenience
+        // Client-side JS အတွက် Role တစ်ခုချင်းစီ၏ Permissions များကို Map လုပ်ထားခြင်း
         $rolePerms = [];
         foreach ($roles as $role) {
             $rolePerms[$role->name] = $role->permissions->pluck('name')->toArray();
         }
 
-        return view('admin.users.create', compact('roles', 'matrix', 'rolePerms'));
+        return view('admin.users.create', compact('roles', 'matrix', 'permissions', 'rolePerms'));
     }
 
     public function store(Request $request)
@@ -63,109 +88,77 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'nullable|string|exists:roles,name',
+            'role' => 'required|string|exists:roles,name',
             'permissions' => 'nullable|array',
             'permissions.*' => 'string'
         ]);
 
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role' => $data['role'] ?? null,
-        ]);
+        // Service class ကိုအသုံးပြု၍ User ကို Create လုပ်ပါသည်
+        $this->userService->createAdminUser($data);
 
-        // Set primary role (single primary role)
-        if (!empty($data['role'])) {
-            $user->syncRoles([$data['role']]);
-        }
-
-        // Sync direct permissions (create missing permissions if necessary)
-        $direct = $request->input('permissions', []);
-        foreach ($direct as $p) {
-            Permission::firstOrCreate(['name' => $p]);
-        }
-        $user->syncPermissions($direct);
-
-        return redirect()->route('admin.users.index')->with('success', 'User created');
+        return redirect()->route('admin.users.index')->with('success', 'User created successfully');
     }
 
-    public function edit($id)
+    public function edit(User $user)
     {
-        $user = User::findOrFail($id);
+        // Policy အရ Edit လုပ်ပိုင်ခွင့်ရှိမရှိ စစ်ဆေးခြင်း
+        Gate::authorize('manage', $user);
+
         $roles = Role::all();
-
-        $modules = [
-            'shops' => 'Shops',
-            'routes' => 'Routes',
-            'logs' => 'Logs',
-            'services' => 'Services',
-            'users' => 'Users'
-        ];
-        $actions = ['view', 'create', 'update', 'delete', 'import', 'export'];
-
-        $matrix = [];
-        foreach ($modules as $key => $label) {
-            foreach ($actions as $act) {
-                $permName = "$act-$key";
-                Permission::firstOrCreate(['name' => $permName]);
-                $matrix[$key][] = ['name' => $permName, 'label' => ucfirst($act)];
-            }
-        }
-
+        $userRoles = $user->roles->pluck('name')->toArray();
+        
+        // Role မှရသော permission ကော၊ direct ပေးထားသော permission ကော အားလုံးယူခြင်း
+        $userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
+        $matrix = $this->getPermissionMatrix();
+        
         $rolePerms = [];
         foreach ($roles as $role) {
             $rolePerms[$role->name] = $role->permissions->pluck('name')->toArray();
         }
 
-        // Direct permissions of user
-        $directPerms = $user->getDirectPermissions()->pluck('name')->toArray();
-
-        return view('admin.users.edit', compact('user', 'roles', 'matrix', 'rolePerms', 'directPerms'));
+        return view('admin.users.edit', compact('user', 'roles', 'userRoles', 'userPermissions', 'matrix', 'rolePerms'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($id);
-
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|string|min:6|confirmed',
-            'role' => 'nullable|string|exists:roles,name',
+            'role' => 'required|string|exists:roles,name',
             'permissions' => 'nullable|array',
             'permissions.*' => 'string'
         ]);
 
-        $user->name = $data['name'];
-        $user->email = $data['email'];
-        if (!empty($data['password'])) {
-            $user->password = Hash::make($data['password']);
-        }
-        $user->role = $data['role'] ?? $user->role;
-        $user->save();
+        // Checkbox မှ data မပါလာပါက empty array သတ်မှတ်ပေးခြင်း
+        $data['custom_permissions'] = $request->input('permissions', []);
 
-        // Sync primary role
-        if (!empty($data['role'])) {
-            $user->syncRoles([$data['role']]);
-        } else {
-            $user->syncRoles([]);
-        }
+        $this->userService->updateAdminUser($user, $data);
 
-        // Sync direct permissions (create if missing)
-        $direct = $request->input('permissions', []);
-        foreach ($direct as $p) {
-            Permission::firstOrCreate(['name' => $p]);
-        }
-        $user->syncPermissions($direct);
-
-        return redirect()->route('admin.users.index')->with('success', 'User updated');
+        return redirect()->route('admin.users.index')->with('success', 'User updated successfully!');
     }
 
     public function destroy($id)
     {
         $user = User::findOrFail($id);
-        $user->delete();
-        return redirect()->route('admin.users.index')->with('success', 'User deleted');
+        
+        // ဖျက်ပိုင်ခွင့်ရှိမရှိ Policy နှင့် စစ်ဆေးခြင်း
+        $this->authorize('delete', $user);
+
+        try {
+            $this->userService->deleteUser($id);
+            return redirect()->route('admin.users.index')->with('success', 'User ကို အောင်မြင်စွာ ဖျက်ပြီးပါပြီ။');
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * AJAX အတွက် Role အလိုက် Permission များကို json ပြန်ပေးရန်
+     */
+    public function getRolePermissions($roleName)
+    {
+        $role = Role::where('name', $roleName)->with('permissions')->first();
+        return response()->json($role ? $role->permissions->pluck('name') : []);
     }
 }
