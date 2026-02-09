@@ -270,7 +270,6 @@
 @include('auth.logs.shopslog')
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     window.appConfig = {
         apiUrl: "{{ url('/api/v1/shops') }}",
@@ -285,5 +284,6 @@
     });
 </script>
 @endif
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="{{ asset('js/shop-map.js') }}"></script>
 @endsection

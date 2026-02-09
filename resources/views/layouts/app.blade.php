@@ -50,14 +50,11 @@
 
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    {{-- ၁။ Services Menu --}}
                     @can('view-services')
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('admin.services.index') }}">Services</a>
                     </li>
                     @endcan
-
-                    {{-- ၂။ Settings Menu (Statuses & Types) --}}
                     @can('view-settings')
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="settingsDrop" data-bs-toggle="dropdown">
@@ -69,8 +66,6 @@
                         </ul>
                     </li>
                     @endcan
-
-                    {{-- ၃။ Routes & Maps Menu --}}
                     @can('route-view')
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="routesDrop" data-bs-toggle="dropdown">
@@ -86,15 +81,12 @@
                         </ul>
                     </li>
                     @endcan
-
-                    {{-- ၄။ Shop Management --}}
                     @can('view-shop-management')
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="shopDrop" data-bs-toggle="dropdown">
                             Shops
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ route('admin.shops.index') }}"><i class="fas fa-list"></i> Shop List</a></li>
                             @can('shop-create')
                             <li><a class="dropdown-item" href="{{ route('admin.shops.create') }}"><i class="fas fa-plus-circle"></i> Add New Shop</a></li>
                             @endcan

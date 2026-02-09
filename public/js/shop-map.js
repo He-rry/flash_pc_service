@@ -8,9 +8,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
-        // Map ကို ရန်ကုန်တည်နေရာဖြင့် အစပြုခြင်း
         map = L.map('map').setView([16.8331, 96.1427], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{y}.png').addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         markerLayer = L.layerGroup().addTo(map);
 
         // မြေပုံပေါ်ကလစ်နှိပ်လျှင် ဆိုင်အသစ်အတွက် နေရာမှတ်ခြင်း
@@ -28,42 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
         setupFilterListeners();
         fetchData();
-        
-        // Map အရွယ်အစား ပြန်ညှိခြင်း
         setTimeout(() => { map.invalidateSize(); }, 500);
     }
 });
 
-function setupFilterListeners() {
-    const searchBtn = document.getElementById('searchBtn');
-    const filterForm = document.getElementById('filterForm');
-    const periodRads = document.querySelectorAll('input[name="period"]');
-
-    periodRads.forEach(rad => {
-        rad.addEventListener('change', function () {
-            periodRads.forEach(r => r.parentElement.classList.remove('active'));
-            if (this.checked) this.parentElement.classList.add('active');
-        });
-    });
-
-    searchBtn?.addEventListener('click', () => fetchData(1));
-
-    filterForm?.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            fetchData(1);
-        }
-    });
-
-    document.addEventListener('click', (e) => {
-        const link = e.target.closest('#paginationContainer a');
-        if (link) {
-            e.preventDefault();
-            const page = new URL(link.href).searchParams.get('page');
-            fetchData(page);
-        }
-    });
-}
+// --- First JS မှ ယူထားသော Logic များ ---
 
 async function fetchData(page = 1) {
     const searchVal = document.getElementById('mapSearch')?.value || '';
@@ -82,7 +50,7 @@ async function fetchData(page = 1) {
         page: page
     });
 
-    // Export Link ကို လက်ရှိ filter အတိုင်း update လုပ်ခြင်း (4af82d4 Fix)
+    // Export Link Update & Disabled State (Second JS style)
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) {
         exportBtn.href = `${window.appConfig.exportUrl}?${params.toString()}`;
@@ -100,11 +68,18 @@ async function fetchData(page = 1) {
         const result = await response.json();
         const total = result.total || 0;
 
-        // Count Badge Update
+        // Update Count Badge
         const countBadge = document.getElementById('filterCountBadge');
         if (countBadge) {
             countBadge.innerText = `${total} Shops`;
             countBadge.className = `badge shadow-sm ${total === 0 ? 'badge-danger' : 'badge-primary'}`;
+        }
+
+        // Export Button State logic
+        if (exportBtn) {
+            exportBtn.classList.toggle('disabled', total === 0);
+            exportBtn.style.pointerEvents = total === 0 ? 'none' : 'auto';
+            exportBtn.style.opacity = total === 0 ? '0.6' : '1';
         }
 
         const tbody = document.getElementById('shopTableBody');
@@ -112,12 +87,7 @@ async function fetchData(page = 1) {
 
         if (total === 0) {
             const colCount = document.querySelectorAll('thead tr th').length || 6;
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="${colCount}" class="text-center py-5 text-danger font-weight-bold">
-                        <i class="fas fa-exclamation-circle mr-2"></i>ကိုက်ညီသော ဒေတာ မရှိပါ။
-                    </td>
-                </tr>`;
+            tbody.innerHTML = `<tr><td colspan="${colCount}" class="text-center py-5 text-danger font-weight-bold"><i class="fas fa-exclamation-circle mr-2"></i>ကိုက်ညီသော ဒေတာ မရှိပါ။</td></tr>`;
         } else {
             renderTable(result.data || []);
         }
@@ -127,8 +97,6 @@ async function fetchData(page = 1) {
 
     } catch (e) {
         console.error('Fetch Error:', e);
-        const tbody = document.getElementById('shopTableBody');
-        if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-danger">စနစ်အတွင်း ချို့ယွင်းချက် ရှိနေပါသည်။</td></tr>`;
     }
 }
 
@@ -136,7 +104,6 @@ function renderTable(shops) {
     const tbody = document.getElementById('shopTableBody');
     if (!tbody) return;
 
-    // Permissions (Single Source of Truth from appConfig)
     const perms = window.appConfig.permissions || [];
     const canViewLogs = perms.includes('view-logs');
     const canEdit = perms.includes('shop-edit');
@@ -148,8 +115,6 @@ function renderTable(shops) {
         const createdDate = new Date(shop.created_at).toLocaleDateString('en-GB');
 
         let rowHtml = `<tr>`;
-
-        // Col 1: Name (Clickable if canEdit)
         rowHtml += `
             <td class="pl-4">
                 <a href="javascript:void(0)" class="text-dark font-weight-bold text-decoration-none" 
@@ -157,52 +122,95 @@ function renderTable(shops) {
                     ${shop.name}
                 </a>
             </td>`;
-
-        // Col 2: Coordinates
-        rowHtml += `
-            <td>
-                <span class="text-monospace small bg-light px-2 py-1 rounded border">
-                    ${parseFloat(shop.lat).toFixed(5)}, ${parseFloat(shop.lng).toFixed(5)}
-                </span>
-            </td>`;
-
-        // Col 3: Region
+        rowHtml += `<td><span class="text-monospace small bg-light px-2 py-1 rounded border">${parseFloat(shop.lat).toFixed(5)}, ${parseFloat(shop.lng).toFixed(5)}</span></td>`;
         rowHtml += `<td class="text-center"><span class="badge badge-light border">${shop.region || '-'}</span></td>`;
-
-        // Col 4: Added By (Visible if canViewLogs)
+        
         if (canViewLogs) {
-            rowHtml += `
-                <td class="text-center">
-                    <span class="badge badge-info-soft text-info px-2 py-1" style="background-color: #e0f2ff;">
-                        <i class="fas fa-user-check mr-1 small"></i>${adminName}
-                    </span>
-                </td>`;
+            rowHtml += `<td class="text-center"><span class="badge badge-info-soft text-info px-2 py-1" style="background-color: #e0f2ff;"><i class="fas fa-user-check mr-1 small"></i>${adminName}</span></td>`;
         }
 
-        // Col 5: Registered At
         rowHtml += `<td class="text-right small text-muted">${createdDate}</td>`;
 
-        // Col 6: Actions
         if (showActionCol) {
             rowHtml += `<td class="text-right pr-4">`;
             if (canEdit) {
-                rowHtml += `
-                    <button class="btn btn-sm btn-light shadow-sm border mr-1" onclick="openEditModal(${shopString})">
-                        <i class="fas fa-edit text-warning"></i>
-                    </button>`;
+                rowHtml += `<button class="btn btn-sm btn-light shadow-sm border mr-1" onclick="openEditModal(${shopString})"><i class="fas fa-edit text-warning"></i></button>`;
             }
             if (canViewLogs) {
-                rowHtml += `
-                    <button class="btn btn-sm btn-light shadow-sm border" onclick="showShopLogs(${shop.id}, '${shop.name.replace(/'/g, "\\'")}')">
-                        <i class="fas fa-history text-info"></i>
-                    </button>`;
+                rowHtml += `<button class="btn btn-sm btn-light shadow-sm border" onclick="showShopLogs(${shop.id}, '${shop.name.replace(/'/g, "\\'")}')"><i class="fas fa-history text-info"></i></button>`;
             }
             rowHtml += `</td>`;
         }
-
         rowHtml += `</tr>`;
         return rowHtml;
     }).join('');
+}
+
+// --- Second JS မှ ယူထားသော ကျန်ရှိသည့် Method များ (Map Picker, Update, Delete, Logs) ---
+
+function enableMapPicker() {
+    const latInput = document.getElementById('edit_lat');
+    const lngInput = document.getElementById('edit_lng');
+    const modal = $('#singleShopModal');
+    const pickerHint = document.getElementById('picker-hint');
+    const lat = parseFloat(latInput.value) || 16.8331;
+    const lng = parseFloat(lngInput.value) || 96.1427;
+
+    modal.modal('hide');
+    pickerHint?.classList.remove('d-none');
+
+    if (markerLayer) map.removeLayer(markerLayer);
+    if (editMarker) map.removeLayer(editMarker);
+
+    editMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+    const finalizeSelection = (latlng) => {
+        latInput.value = latlng.lat.toFixed(6);
+        lngInput.value = latlng.lng.toFixed(6);
+        setTimeout(() => {
+            modal.modal('show');
+            pickerHint?.classList.add('none');
+            map.off('click', onMapClick);
+            if (markerLayer) markerLayer.addTo(map);
+            if (editMarker) { map.removeLayer(editMarker); editMarker = null; }
+        }, 400);
+    };
+
+    const onMapClick = (e) => {
+        editMarker.setLatLng(e.latlng);
+        finalizeSelection(e.latlng);
+    };
+
+    map.on('click', onMapClick);
+    editMarker.on('dragend', (e) => finalizeSelection(e.target.getLatLng()));
+    
+    document.getElementById('map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    map.flyTo([lat, lng], 18, { animate: true, duration: 1.5 });
+}
+
+function setupFilterListeners() {
+    const searchBtn = document.getElementById('searchBtn');
+    const filterForm = document.getElementById('filterForm');
+    const periodRads = document.querySelectorAll('input[name="period"]');
+
+    periodRads.forEach(rad => {
+        rad.addEventListener('change', function () {
+            periodRads.forEach(r => r.parentElement.classList.remove('active'));
+            if (this.checked) this.parentElement.classList.add('active');
+        });
+    });
+
+    searchBtn?.addEventListener('click', () => fetchData(1));
+    filterForm?.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); fetchData(1); } });
+
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('#paginationContainer a');
+        if (link) {
+            e.preventDefault();
+            const page = new URL(link.href).searchParams.get('page');
+            fetchData(page);
+        }
+    });
 }
 
 function renderMarkers(shops) {

@@ -8,7 +8,6 @@ use App\Http\Requests\StoreShopRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
-use Spatie\Permission\Models\Permission;
 
 class ShopController extends Controller
 {
@@ -21,10 +20,6 @@ class ShopController extends Controller
         $this->middleware('permission:delete-shops')->only(['destroy']);
         $this->middleware('permission:view-logs')->only(['getLogs']);
     }
-
-    /**
-     * ဆိုင်များစာရင်းနှင့် Filter ပြုလုပ်ခြင်း
-     */
     public function create(Request $request)
     {
         $shops = Shop::applyFilters($request->all())->latest()->paginate(10);

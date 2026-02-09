@@ -72,4 +72,12 @@ class UserPolicy
     {
         return false;
     }
+    public function manage(User $authenticatedUser, User $targetUser)
+    {
+        if ($targetUser->hasRole('super-admin')) {
+            return false;
+        }
+
+        return $authenticatedUser->hasRole('super-admin');
+    }
 }

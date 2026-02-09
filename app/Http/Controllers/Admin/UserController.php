@@ -91,7 +91,6 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        // Policy အရ Edit လုပ်ပိုင်ခွင့်ရှိမရှိ စစ်ဆေးခြင်း
         Gate::authorize('manage', $user);
 
         $roles = Role::all();

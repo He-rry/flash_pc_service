@@ -46,12 +46,17 @@
                                 </form>
 
                                 <form action="{{ route('admin.users.forceDelete', $user->id) }}" method="POST" class="d-inline"
-                                    onsubmit="return confirm('သတိပြုရန်! ဤ User ကို အပြီးတိုင်ဖျက်ပါက ပြန်ယူ၍မရတော့ပါ။')">
+                                    onsubmit="return confirm('Are you sure you want to permanently delete this user? This action cannot be undone.')">
                                     @csrf
                                     <button type="submit" class="btn btn-sm btn-outline-dark">
                                         <i class="fas fa-eraser"></i> Force Delete
                                     </button>
                                 </form>
+                                @else
+                                @if($user->hasRole('super-admin'))
+                                <span class="badge bg-secondary px-2 py-1 shadow-sm" style="font-size: 11px;">
+                                    <i class="fas fa-lock me-1"></i> System Protected
+                                </span>
                                 @else
                                 <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-outline-secondary me-2">
                                     <i class="fas fa-edit"></i> Edit
@@ -59,7 +64,7 @@
 
                                 @can('user-delete')
                                 <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
-                                    onsubmit="return confirm('ဒီ User ကို ဖျက်မှာ သေချာပါသလား?')">
+                                    onsubmit="return confirm('Are you sure you want to delete this user?')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger">
@@ -67,6 +72,7 @@
                                     </button>
                                 </form>
                                 @endcan
+                                @endif
                                 @endif
                             </div>
                         </td>
