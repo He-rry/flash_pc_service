@@ -38,8 +38,6 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-
-        // Session တွေကို အကုန်ဖျက်ပြီး Token အသစ်ပြောင်း
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

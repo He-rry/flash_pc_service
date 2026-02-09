@@ -12,10 +12,10 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Reset cached roles and permissions
+        // Cache များကို ရှင်းထုတ်ခြင်း
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
-        // ၁။ System တစ်ခုလုံးအတွက် လိုအပ်မယ့် Permission အစုံအလင်ကို အရင်ဆောက်မယ်
+        // ၁။ System တစ်ခုလုံးအတွက် Permission များ သတ်မှတ်ခြင်း
         $permissions = [
             'view-services-info',
             'edit-services',
@@ -38,6 +38,7 @@ class RolePermissionSeeder extends Seeder
             'route-delete',
             'route-view',
             'manage-users',
+            'user-delete', // New: For Restore/Force Delete
             'view-logs',
             'view-services',
             'view-settings',
@@ -50,30 +51,30 @@ class RolePermissionSeeder extends Seeder
 
         // ၂။ Role များ ဆောက်ပြီး Permission ပေးခြင်း
         
-        // Super Admin
+        // Super Admin: Permission အားလုံး ပေးထားမည်
         Role::findOrCreate('super-admin')->givePermissionTo(Permission::all());
 
-        // Manager
+        // Manager: စီမံခန့်ခွဲမှုပိုင်းဆိုင်ရာ Permission များ
         Role::findOrCreate('manager')->givePermissionTo([
             'shop-list', 'route-list', 'view-services', 
             'view-settings', 'shop-export', 'shop-import'
         ]);
 
-        // Editor
+        // Editor: ဆိုင်အချက်အလက် ပြင်ဆင်နိုင်သူ
         Role::findOrCreate('editor')->givePermissionTo([
             'shop-list', 'shop-edit', 'shop-import', 'view-shop-management'
         ]);
 
-        // Route Planner
+        // Route Planner: မြေပုံနှင့် လမ်းကြောင်း ရေးဆွဲသူ
         Role::findOrCreate('route-planner')->givePermissionTo([
             'route-list', 'route-create', 'route-view'
         ]);
 
-        // Log Manager
+        // Log Manager: မှတ်တမ်းများ ကြည့်ရှုနိုင်သူ
         Role::findOrCreate('log-manager')->givePermissionTo(['view-logs']);
 
 
-        // ၃။ ရှိပြီးသား User တွေကို Role တွေ အလိုအလျောက် သတ်မှတ်ပေးခြင်း (Mapping)
+        // ၃။ ရှိပြီးသား User များကို Spatie Role စနစ်သို့ ပြောင်းလဲပေးခြင်း (Mapping)
         $mapping = [
             User::ROLE_SUPER_ADMIN => 'super-admin',
             User::ROLE_MANAGER => 'manager',
@@ -82,13 +83,13 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach (User::all() as $user) {
-            $currentRoleColumn = $user->role; // သင့် table ထဲက column name ဖြစ်ရပါမယ်
+            $currentRoleColumn = $user->role; // users table ထဲက role column name
             if ($currentRoleColumn && isset($mapping[$currentRoleColumn])) {
                 $user->assignRole($mapping[$currentRoleColumn]);
             }
         }
 
-        // Clear cache again
+        // အပြောင်းအလဲများပြီးနောက် Cache ကို ထပ်မံရှင်းထုတ်ခြင်း
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

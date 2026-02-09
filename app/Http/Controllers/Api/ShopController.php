@@ -16,7 +16,6 @@ class ShopController extends Controller
         $allFiltered = (clone $query)->get();
         $paginated = $query->paginate(10);
         /** @var \App\Models\User $user */ // 
-        // လက်ရှိ Login ဝင်ထားတဲ့ User ရဲ့ Permission များကို စစ်ဆေးခြင်း
         $user = Auth::user();
         $permissions = [
             'can_view_logs' => $user ? $user->can('view-logs') : false,
