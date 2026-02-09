@@ -24,11 +24,7 @@
         @can('view-shop-management')
         <div class="col-lg-8">
             <div class="custom-card p-4">
-<<<<<<< HEAD
-                @can('manage-shops')
-=======
                 @can ('shop-create')
->>>>>>> b226a99 (user account create and permissions added)
                 <h6 class="section-title mb-3"><i class="fas fa-plus-circle mr-2"></i>Register & Import Shops</h6>
                 <form action="{{ route('admin.shops.store') }}" method="POST" class="mb-4">
                     @csrf
@@ -108,14 +104,9 @@
                         @endcan
                     </div>
                 </form>
-                @else
-                <h6 class="section-title mb-3"><i class="fas fa-store mr-2"></i>Shops (View Only)</h6>
-                <p class="text-muted small mb-0">Use filters on the right to search. You do not have permission to add, edit, or import/export shops.</p>
-                @endcan
             </div>
         </div>
         @endcan
-        @can('view-filters')
         <div class="col-lg-4">
             <div class="custom-card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -169,7 +160,6 @@
                 </div>
             </div>
         </div>
-        @endcan
 
     </div>
 </div>

@@ -22,11 +22,7 @@
                 <tr>
                     <td>{{ $type->service_name }}</td>
                     <td>
-<<<<<<< HEAD
-                        @can('manage-services')
-=======
                         @can('edit-service-type')
->>>>>>> b226a99 (user account create and permissions added)
                         <a href="{{ route('admin.service-types.edit', $type->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
                         @endcan
                         @can('delete-service-type')

@@ -22,16 +22,17 @@
                  <tr>
                      <td>{{ $status->status_name }}</td>
                      <td>
-                         <<<<<<< HEAD
-                             @can('manage-services')=======@can('edit-status')>>>>>>> b226a99 (user account create and permissions added)
-                             <a href="{{ route('admin.statuses.edit', $status->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
-                             @endcan
-                             @can('delete-status')
-                             <form action="{{ route('admin.statuses.destroy', $status->id) }}" method="POST" class="d-inline">
-                                 @csrf @method('DELETE')
-                                 <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
-                             </form>
-                             @endcan
+
+                         @can('edit-status')
+                         <a href="{{ route('admin.statuses.edit', $status->id) }}" class="btn btn-sm btn-info text-white">Edit</a>
+                         @endcan
+
+                         @can('delete-status')
+                         <form action="{{ route('admin.statuses.destroy', $status->id) }}" method="POST" class="d-inline">
+                             @csrf @method('DELETE')
+                             <button class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</button>
+                         </form>
+                         @endcan
                      </td>
                  </tr>
                  @endforeach

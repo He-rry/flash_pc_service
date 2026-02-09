@@ -47,17 +47,7 @@
                 <i class="fas fa-arrow-left mr-1"></i> Back to Planner
             </a>
         </div>
-        //export
         <div class="card-body">
-            @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            @endif
-
             <div class="table-responsive">
                 <table class="table table-hover border">
                     <thead class="thead-light">
@@ -96,16 +86,16 @@
                             </td>
                             <td class="text-center">
                                 <div class="btn-group">
-                                    @can('route-view')
                                     <a href="{{ route('admin.maps.show', $route->id) }}" class="btn btn-sm btn-info text-white">
                                         <i class="fas fa-eye"></i> View
                                     </a>
-
-                                    @endcan
-                                    @can('route-delete')
+                                    @can('manage-routes')
                                     <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ $route->id }})">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    <form id="delete-form-{{ $route->id }}" action="{{ route('admin.maps.destroy', $route->id) }}" method="POST" style="display: none;">
+                                        @csrf @method('DELETE')
+                                    </form>
                                     @endcan
                                 </div>
                             </td>

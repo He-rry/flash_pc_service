@@ -1,5 +1,4 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -10,14 +9,6 @@
         </a>
         @endcan
     </div>
-
-    @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-
     <div class="card shadow-sm border-0">
         <div class="card-body">
             <table class="table">
@@ -85,7 +76,6 @@
             </table>
         </div>
     </div>
-
     <div class="mt-4">
         {{ $users->links('pagination::bootstrap-5') }}
     </div>
