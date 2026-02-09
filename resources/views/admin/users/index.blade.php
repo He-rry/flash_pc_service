@@ -19,56 +19,70 @@
     @endif
 
     <div class="card shadow-sm border-0">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
-                        <tr>
-                            <th class="ps-4">Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th class="text-end pe-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($users as $user)
-                        <tr>
-                            <td class="ps-4">
-                                <span class="fw-bold">{{ $user->name }}</span>
-                            </td>
-                            <td>{{ $user->email }}</td>
-                            <td>
-                                @if($user->roles->count() > 0)
-                                @foreach($user->roles as $role)
-                                <span class="badge bg-info text-dark rounded-pill shadow-xs">{{ $role->name }}</span>
-                                @endforeach
-                                @else
-                                <span class="badge bg-secondary rounded-pill">No Role</span>
-                                @endif
-                            </td>
-                            <td class="text-end pe-4">
-                                @can('manage-users')
-                                <div class="btn-group" role="group">
-                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-outline-primary">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </a>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($users as $user)
+                    <tr class="{{ $user->trashed() ? 'table-light text-muted' : '' }}">
+                        <td>
+                            {{ $user->name }}
+                            @if($user->trashed())
+                            <span class="badge bg-danger ms-1" style="font-size: 10px;">Deleted</span>
+                            @endif
+                        </td>
+                        <td>{{ $user->email }}</td>
+                        <td>
+                            @foreach($user->roles as $role)
+                            <span class="badge bg-info text-dark">{{ $role->name }}</span>
+                            @endforeach
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                @if($user->trashed())
+                                <form action="{{ route('admin.users.restore', $user->id) }}" method="POST" class="d-inline me-2">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-undo"></i> Restore
+                                    </button>
+                                </form>
 
-                                    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" class="d-inline"
-                                        onsubmit="return confirm('ဒီ User ကို ဖျက်မှာ သေချာပါသလား?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger ms-1">
-                                            <i class="fas fa-trash"></i> Delete
-                                        </button>
-                                    </form>
-                                </div>
+                                <form action="{{ route('admin.users.forceDelete', $user->id) }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('သတိပြုရန်! ဤ User ကို အပြီးတိုင်ဖျက်ပါက ပြန်ယူ၍မရတော့ပါ။')">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-outline-dark">
+                                        <i class="fas fa-eraser"></i> Force Delete
+                                    </button>
+                                </form>
+                                @else
+                                <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-outline-secondary me-2">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+
+                                @can('user-delete')
+                                <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
+                                    onsubmit="return confirm('ဒီ User ကို ဖျက်မှာ သေချာပါသလား?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
                                 @endcan
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 

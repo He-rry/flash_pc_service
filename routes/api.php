@@ -23,7 +23,7 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
 
         // --- Shop Resources ---
-        Route::middleware('permission:shop-view')->group(function () {
+        Route::middleware('permission:view-shop-management')->group(function () {
             Route::get('/shops', [ApiShopController::class, 'index'])->name('api.shops.index');
             Route::get('/shops/{id}', [ApiShopController::class, 'show'])->name('api.shops.show');
         });

@@ -25,7 +25,7 @@ class Shop extends Model
     ];
     public function admin()
     {
-        return $this->belongsTo(User::class, 'added_by');
+        return $this->belongsTo(User::class, 'added_by')->withTrashed();
     }
     public function activity()
     {
@@ -49,7 +49,6 @@ class Shop extends Model
                     if ($period === 'today') {
                         $q->whereDate('created_at', now());
                     } elseif (is_numeric($period)) {
-                        // 3, 6, 12 လ အတွက် logic
                         $q->where('created_at', '<=', now()->subMonths((int)$period));
                     }
                 }

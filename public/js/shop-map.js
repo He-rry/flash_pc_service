@@ -1,6 +1,5 @@
 let map, markerLayer, tempMarker = null;
 let editMarker = null;
-let permissions = [];
 
 const isLeafletReady = () => typeof L !== 'undefined';
 
@@ -9,11 +8,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
+        // Map ကို ရန်ကုန်တည်နေရာဖြင့် အစပြုခြင်း
         map = L.map('map').setView([16.8331, 96.1427], 12);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{y}.png').addTo(map);
         markerLayer = L.layerGroup().addTo(map);
 
-        // Map click for New Shop
+        // မြေပုံပေါ်ကလစ်နှိပ်လျှင် ဆိုင်အသစ်အတွက် နေရာမှတ်ခြင်း
         map.on('click', (e) => {
             const { lat, lng } = e.latlng;
             const latField = document.getElementById('form_lat');
@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         setupFilterListeners();
         fetchData();
+        
+        // Map အရွယ်အစား ပြန်ညှိခြင်း
         setTimeout(() => { map.invalidateSize(); }, 500);
     }
 });
@@ -80,6 +82,7 @@ async function fetchData(page = 1) {
         page: page
     });
 
+    // Export Link ကို လက်ရှိ filter အတိုင်း update လုပ်ခြင်း (4af82d4 Fix)
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) {
         exportBtn.href = `${window.appConfig.exportUrl}?${params.toString()}`;
@@ -97,6 +100,7 @@ async function fetchData(page = 1) {
         const result = await response.json();
         const total = result.total || 0;
 
+        // Count Badge Update
         const countBadge = document.getElementById('filterCountBadge');
         if (countBadge) {
             countBadge.innerText = `${total} Shops`;
@@ -104,8 +108,10 @@ async function fetchData(page = 1) {
         }
 
         const tbody = document.getElementById('shopTableBody');
+        if (!tbody) return;
+
         if (total === 0) {
-            const colCount = document.querySelectorAll('thead tr th').length;
+            const colCount = document.querySelectorAll('thead tr th').length || 6;
             tbody.innerHTML = `
                 <tr>
                     <td colspan="${colCount}" class="text-center py-5 text-danger font-weight-bold">
@@ -199,47 +205,6 @@ function renderTable(shops) {
     }).join('');
 }
 
-// Map Picker, Markers, Pagination, Modal & Logs logic (Remains the same but cleaned)
-function enableMapPicker() {
-    const latInput = document.getElementById('edit_lat');
-    const lngInput = document.getElementById('edit_lng');
-    const modal = $('#singleShopModal');
-    const pickerHint = document.getElementById('picker-hint');
-    const lat = parseFloat(latInput.value) || 16.8331;
-    const lng = parseFloat(lngInput.value) || 96.1427;
-
-    modal.modal('hide');
-    pickerHint?.classList.remove('d-none');
-
-    if (markerLayer) map.removeLayer(markerLayer);
-    if (editMarker) map.removeLayer(editMarker);
-
-    editMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
-
-    const finalizeSelection = (latlng) => {
-        latInput.value = latlng.lat.toFixed(6);
-        lngInput.value = latlng.lng.toFixed(6);
-        setTimeout(() => {
-            modal.modal('show');
-            pickerHint?.classList.add('d-none');
-            map.off('click', onMapClick);
-            if (markerLayer) markerLayer.addTo(map);
-            if (editMarker) { map.removeLayer(editMarker); editMarker = null; }
-        }, 400);
-    };
-
-    const onMapClick = (e) => {
-        editMarker.setLatLng(e.latlng);
-        finalizeSelection(e.latlng);
-    };
-
-    map.on('click', onMapClick);
-    editMarker.on('dragend', (e) => finalizeSelection(e.target.getLatLng()));
-
-    document.getElementById('map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    map.flyTo([lat, lng], 18, { animate: true, duration: 1.5 });
-}
-
 function renderMarkers(shops) {
     if (!markerLayer) return;
     markerLayer.clearLayers();
@@ -259,17 +224,16 @@ function renderMarkers(shops) {
 function renderPagination(data) {
     const container = document.getElementById('paginationContainer');
     if (!data.links || data.last_page <= 1) {
-        container.innerHTML = '';
+        if (container) container.innerHTML = '';
         return;
     }
     let html = '<ul class="pagination mb-0">';
     data.links.forEach(link => {
-        html += `
-            <li class="page-item ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}">
-                <a class="page-link" href="${link.url || '#'}">${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}</a>
-            </li>`;
+        html += `<li class="page-item ${link.active ? 'active' : ''} ${!link.url ? 'disabled' : ''}">
+                    <a class="page-link" href="${link.url || '#'}">${link.label.replace('&laquo;', '«').replace('&raquo;', '»')}</a>
+                 </li>`;
     });
-    container.innerHTML = html + '</ul>';
+    if (container) container.innerHTML = html + '</ul>';
 }
 
 function openEditModal(shop) {
@@ -306,7 +270,7 @@ async function updateShop() {
         } else {
             showToast('ပြင်ဆင်မှု မအောင်မြင်ပါ။ ပြန်လည်ကြိုးစားပါ', 'danger');
         }
-    } catch (e) { console.error(e); showToast('System Error ဖြစ်ပွားနေပါသည်', 'danger'); }
+    } catch (e) { showToast('System Error ဖြစ်ပွားနေပါသည်', 'danger'); }
 }
 
 async function deleteShop() {
@@ -325,16 +289,14 @@ async function deleteShop() {
             fetchData();
             showToast('ဆိုင်ကို အောင်မြင်စွာ ဖျက်သိမ်းပြီးပါပြီ', 'danger');
         } else {
-            const errorData = await response.json();
-            showToast('ဖျက်၍မရပါ: ' + (errorData.message || 'ဆိုင်ကို ရှာမတွေ့ပါ'), 'danger');
+            showToast('ဖျက်၍မရပါ', 'danger');
         }
     } catch (e) { console.error(e); }
 }
 
 function showToast(message, type = 'success') {
     const toastElement = $('#toast-message');
-    const header = $('#toast-header');
-    header.removeClass('bg-success bg-danger').addClass(type === 'success' ? 'bg-success' : 'bg-danger');
+    $('#toast-header').removeClass('bg-success bg-danger').addClass(type === 'success' ? 'bg-success' : 'bg-danger');
     document.getElementById('toast-body').innerText = message;
     toastElement.toast({ delay: 1500 }).toast('show');
 }
@@ -348,12 +310,10 @@ async function showShopLogs(shopId, shopName) {
     try {
         const response = await fetch(`/admin/shops/${shopId}/logs`);
         const logs = await response.json();
-
         if (logs.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted">မှတ်တမ်းမရှိသေးပါ။</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5">မှတ်တမ်းမရှိသေးပါ။</td></tr>';
             return;
         }
-
         tbody.innerHTML = logs.map(log => {
             const badgeClass = { 'ADD': 'bg-success', 'UPDATE': 'bg-warning', 'DELETE': 'bg-danger', 'IMPORT': 'bg-info' }[log.action] || 'bg-light';
             const adminInitial = log.user ? log.user.name.charAt(0) : 'S';

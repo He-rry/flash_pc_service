@@ -20,7 +20,6 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Customer (Public) Section
 Route::prefix('customers')->name('customer.')->group(function () {
     Route::get('/report', function () {
         $service_types = \App\Models\ServiceType::all();
@@ -42,7 +41,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 /*
 |--------------------------------------------------------------------------
-| Admin Panel Routes (Protected by Auth & Role)
+| Admin Panel Routes
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'AdminAuth'])->prefix('admin')->name('admin.')->group(function () {
@@ -50,8 +49,14 @@ Route::middleware(['auth', 'AdminAuth'])->prefix('admin')->name('admin.')->group
     // --- 1. Dashboard ---
     Route::get('/', [ServiceController::class, 'index'])->name('dashboard');
 
-    // --- 2. User Management (Super Admin or Manage Users Permission) ---
+    // --- 2. User Management (Merged logic with Soft Delete routes) ---
     Route::middleware(['permission:manage-users'])->group(function () {
+        // Soft Delete & Restore routes (from 4af82d4)
+        Route::post('users/{id}/restore', [UserController::class, 'restore'])
+            ->name('users.restore');
+        Route::post('users/{id}/force-delete', [UserController::class, 'forceDelete'])
+            ->name('users.forceDelete');
+
         Route::resource('users', UserController::class);
         Route::get('/get-role-permissions/{name}', [UserController::class, 'getRolePermissions'])
             ->name('get_role_permissions');
@@ -74,7 +79,6 @@ Route::middleware(['auth', 'AdminAuth'])->prefix('admin')->name('admin.')->group
         ->middleware('permission:shop-export')
         ->name('shops.download.duplicates');
 
-    // Shop resource ကို edit/delete/list permission တွေအလိုက် controller ထဲမှာပါ စစ်ထားဖို့ လိုပါမယ်
     Route::resource('shops', ShopController::class);
 
     // --- 5. Route Planner (Maps) ---

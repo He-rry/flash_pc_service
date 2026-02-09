@@ -37,7 +37,19 @@
                                     <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width:32px; height:32px; font-size:12px;">
                                         {{ substr($log->user->name ?? 'S', 0, 1) }}
                                     </div>
-                                    <span class="fw-bold small">{{ $log->user->name ?? 'System' }}</span>
+
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold small">
+                                            @if($log->user)
+                                            {{ $log->user->name }}
+                                            @if($log->user->trashed())
+                                            <span class="text-danger" style="font-size: 10px;">(deleted)</span>
+                                            @endif
+                                            @else
+                                            System
+                                            @endif
+                                        </span>
+                                    </div>
                                 </div>
                             </td>
                             <td>
@@ -47,6 +59,8 @@
                                 'UPDATE' => 'bg-warning text-dark',
                                 'DELETE' => 'bg-danger',
                                 'IMPORT' => 'bg-info text-dark',
+                                'RESTORE_USER' => 'bg-success',
+                                'FORCE_DELETE_USER' => 'bg-danger',
                                 default => 'bg-secondary'
                                 };
                                 @endphp

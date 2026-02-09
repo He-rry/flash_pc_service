@@ -21,18 +21,20 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+
             $user = Auth::user();
-            if ($user->isLogManager()) {
-                return redirect()->route('admin.logs.index');
-            }
-            if ($user->isEditor()) {
-                return redirect()->route('admin.shops.create');
-            }
-            return redirect()->route('admin.services.index');
+
+            // Role အလိုက် သက်ဆိုင်ရာ Page ဆီသို့ Redirect လုပ်ခြင်း
+            return match (true) {
+                $user->hasRole('log-manager') => redirect()->route('admin.logs.index'),
+                $user->hasRole('editor')      => redirect()->route('admin.shops.create'),
+                default                       => redirect()->route('admin.dashboard'),
+            };
         }
 
         return back()->withErrors(['email' => 'အချက်အလက် မှားယွင်းနေပါသည်။']);
     }
+
     public function logout(Request $request)
     {
         Auth::logout();

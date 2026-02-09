@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class ActivityLog extends Model
 {
-    // Migration နဲ့ အညီ အကုန်ဖြည့်လိုက်ပါ
     protected $fillable = [
         'user_id',
         'action',
@@ -24,7 +23,7 @@ class ActivityLog extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     public function shop()

@@ -92,4 +92,22 @@ class UserService
         $this->logActivity('DELETE_USER', "Deleted user: {$userName}");
         return true;
     }
+    public function restoreUser($id)
+    {
+        $user = User::withTrashed()->findOrFail($id);
+        $user->restore();
+        $this->logActivity('RESTORE_USER', "Restored user: {$user->name}");
+
+        return $user;
+    }
+    public function forceDeleteUser($id)
+    {
+        if (Auth::id() == $id) {
+            throw new \Exception("မိမိအကောင့်ကို မိမိအပြီးတိုင် ဖျက်၍ မရနိုင်ပါ။");
+        }
+        $user = User::withTrashed()->findOrFail($id);
+        $userName = $user->name;
+        $this->logActivity('FORCE_DELETE_USER', "Permanently deleted user: {$userName}");
+        return $user->forceDelete();
+    }
 }

@@ -41,6 +41,7 @@ class RolePermissionSeeder extends Seeder
             'view-logs',
             'view-services',
             'view-settings',
+            'view-filters',
         ];
 
         foreach ($permissions as $permission) {

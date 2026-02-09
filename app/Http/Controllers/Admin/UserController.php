@@ -8,7 +8,7 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Repositories\UserRepository;
-use App\Services\UserService; // UserService class ရှိရန်လိုအပ်ပါသည်
+use App\Services\UserService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 
@@ -22,21 +22,17 @@ class UserController extends Controller
         $this->userRepo = $userRepo;
         $this->userService = $userService;
         
-        // Security အတွက် manage-users permission ရှိသူသာ ဝင်ခွင့်ပြုမည်
+        // Security: manage-users permission ရှိသူသာ ဝင်ခွင့်ပြုမည်
         $this->middleware('can:manage-users');
     }
 
     public function index()
     {
-        // Pagination နှင့်အတူ roles ပါ တစ်ခါတည်း load လုပ်ထားပါသည်
-        $users = User::with('roles')->latest()->paginate(15);
+        // Deleted users များကိုပါ မြင်နိုင်ရန် withTrashed() ထည့်ထားပါသည်
+        $users = User::withTrashed()->with('roles')->latest()->paginate(15);
         return view('admin.users.index', compact('users'));
     }
 
-    /**
-     * Permission Matrix Logic
-     * UI တွင် Module အလိုက် (ဥပမာ- Shops, Routes) ခွဲခြားပြသရန်အတွက်ဖြစ်သည်
-     */
     private function getPermissionMatrix()
     {
         $modules = [
@@ -47,18 +43,16 @@ class UserController extends Controller
             'users'    => 'Users',
             'settings' => 'Settings'
         ];
-        
-        $actions = ['view', 'create', 'update', 'delete', 'import', 'export'];
 
+        $actions = ['view', 'create', 'update', 'delete', 'import', 'export'];
         $matrix = [];
+
         foreach ($modules as $key => $label) {
             foreach ($actions as $act) {
                 $permName = "$act-$key";
-                
-                // DB ထဲမှာ ရှိပြီးသား Permission ဖြစ်မှသာ Matrix ထဲထည့်မည်
                 if (Permission::where('name', $permName)->exists()) {
                     $matrix[$label][] = [
-                        'name' => $permName, 
+                        'name' => $permName,
                         'label' => ucfirst($act)
                     ];
                 }
@@ -73,7 +67,6 @@ class UserController extends Controller
         $matrix = $this->getPermissionMatrix();
         $permissions = Permission::all();
 
-        // Client-side JS အတွက် Role တစ်ခုချင်းစီ၏ Permissions များကို Map လုပ်ထားခြင်း
         $rolePerms = [];
         foreach ($roles as $role) {
             $rolePerms[$role->name] = $role->permissions->pluck('name')->toArray();
@@ -93,21 +86,16 @@ class UserController extends Controller
             'permissions.*' => 'string'
         ]);
 
-        // Service class ကိုအသုံးပြု၍ User ကို Create လုပ်ပါသည်
         $this->userService->createAdminUser($data);
-
         return redirect()->route('admin.users.index')->with('success', 'User created successfully');
     }
 
     public function edit(User $user)
     {
-        // Policy အရ Edit လုပ်ပိုင်ခွင့်ရှိမရှိ စစ်ဆေးခြင်း
         Gate::authorize('manage', $user);
 
         $roles = Role::all();
         $userRoles = $user->roles->pluck('name')->toArray();
-        
-        // Role မှရသော permission ကော၊ direct ပေးထားသော permission ကော အားလုံးယူခြင်း
         $userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
         $matrix = $this->getPermissionMatrix();
         
@@ -130,32 +118,46 @@ class UserController extends Controller
             'permissions.*' => 'string'
         ]);
 
-        // Checkbox မှ data မပါလာပါက empty array သတ်မှတ်ပေးခြင်း
+        // Input field mapping ညှိနှိုင်းခြင်း
         $data['custom_permissions'] = $request->input('permissions', []);
 
         $this->userService->updateAdminUser($user, $data);
-
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully!');
     }
 
     public function destroy($id)
     {
         $user = User::findOrFail($id);
-        
-        // ဖျက်ပိုင်ခွင့်ရှိမရှိ Policy နှင့် စစ်ဆေးခြင်း
-        $this->authorize('delete', $user);
+        Gate::authorize('delete', $user);
 
         try {
             $this->userService->deleteUser($id);
-            return redirect()->route('admin.users.index')->with('success', 'User ကို အောင်မြင်စွာ ဖျက်ပြီးပါပြီ။');
+            return redirect()->route('admin.users.index')->with('success', 'User has been deleted (Soft Delete).');
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
     }
 
-    /**
-     * AJAX အတွက် Role အလိုက် Permission များကို json ပြန်ပေးရန်
-     */
+    public function restore($id)
+    {
+        try {
+            $this->userService->restoreUser($id);
+            return redirect()->back()->with('success', 'User has been restored successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
+    public function forceDelete($id)
+    {
+        try {
+            $this->userService->forceDeleteUser($id);
+            return redirect()->back()->with('success', 'User has been permanently deleted.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
     public function getRolePermissions($roleName)
     {
         $role = Role::where('name', $roleName)->with('permissions')->first();
