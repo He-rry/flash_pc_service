@@ -23,9 +23,11 @@ A Laravel-based system for managing PC repair services with customer tracking an
 
 ## 🔧 Installation
 1. `composer install`
-2. `php artisan migrate --seed` || `php artisan migrate:fresh --seed`
-3. `php artisan serve`
-4. 
+2. `cp .env.example .env`
+3. `php artisan key:generate`
+4. `php artisan migrate --seed` || `php artisan migrate:fresh --seed`
+5. `php artisan serve`
+
 ## 📊 Status Flow
 1. **New** - Initial report received.
 2. **On Going** - Repair started.
