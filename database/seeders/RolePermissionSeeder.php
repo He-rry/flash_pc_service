@@ -12,10 +12,10 @@ class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Cache များကို ရှင်းထုတ်ခြင်း
         app(PermissionRegistrar::class)->forgetCachedPermissions();
         $permissions = [
             'view-services-info',
+            'add-services',
             'edit-services',
             'delete-services',
             'add-status',
@@ -36,7 +36,7 @@ class RolePermissionSeeder extends Seeder
             'route-delete',
             'route-view',
             'manage-users',
-            'user-delete', // New: For Restore/Force Delete
+            'user-delete',
             'view-logs',
             'view-services',
             'view-settings',
@@ -46,17 +46,38 @@ class RolePermissionSeeder extends Seeder
         foreach ($permissions as $permission) {
             Permission::findOrCreate($permission);
         }
-        Role::findOrCreate('super-admin')->givePermissionTo(Permission::all());
-        Role::findOrCreate('manager')->givePermissionTo([
-            'shop-list', 'route-list', 'view-services', 
-            'view-settings', 'shop-export', 'shop-import'
+        Role::findOrCreate('super-admin')->syncPermissions(Permission::all());
+        Role::findOrCreate('manager')->syncPermissions([
+            'shop-list',
+            'route-list',
+            'view-services',
+            'view-settings',
+            'shop-export',
+            'shop-import'
         ]);
-        Role::findOrCreate('editor')->givePermissionTo([
-            'shop-list', 'shop-edit', 'shop-import', 'view-shop-management'
+        Role::findOrCreate('editor')->syncPermissions([
+            'shop-list',
+            'shop-edit',
+            'shop-import',
+            'view-shop-management',
+            'view-services',
+            'view-settings',
+            'edit-services',
+            'edit-status',
+            'edit-service-type',
+            'view-filters',
+            'shop-import',
         ]);
-        Role::findOrCreate('route-planner')->givePermissionTo([
-            'route-list', 'route-create', 'route-view'
+        Role::findOrCreate('route-planner')->syncPermissions([
+            'route-list',
+            'route-create',
+            'route-view'
         ]);
-        Role::findOrCreate('log-manager')->givePermissionTo(['view-logs']);
+        Role::findOrCreate('log-manager')->syncPermissions([
+            'view-logs',
+            'view-shop-management',
+            'shop-list',
+            'view-settings'
+        ]);
     }
 }

@@ -87,9 +87,7 @@
                             Shops
                         </a>
                         <ul class="dropdown-menu">
-                            @can('shop-create')
                             <li><a class="dropdown-item" href="{{ route('admin.shops.create') }}"><i class="fas fa-plus-circle"></i> Add New Shop</a></li>
-                            @endcan
                         </ul>
                     </li>
                     @endcan

@@ -3,7 +3,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>Service Records</h3>
-    @can('manage-services')
+    @can('add-services')
     <a href="{{route('admin.services.create')}}" class="btn btn-primary">Add New Service</a>
     @endcan
 </div>

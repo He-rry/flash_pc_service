@@ -3,12 +3,10 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 <style>
-    /* Table Row Hover effect ကို data မြင်သာအောင် လျှော့ချထားပါတယ် */
     .table-hover tbody tr:hover {
         background-color: rgba(0, 123, 255, 0.05) !important;
     }
 
-    /* Badge များကို အမြဲတမ်း မြင်နေရအောင် background color သတ်မှတ်ချက်ကို ခိုင်မာအောင် လုပ်ထားပါတယ် */
     .badge-custom {
         display: inline-block;
         padding: 0.5em 0.8em;
@@ -16,17 +14,14 @@
         font-weight: 600;
         border-radius: 4px;
         width: 100%;
-        /* Full width လိုချင်ရင် ထားပါ */
         text-align: center;
     }
 
-    /* Info Badge (Distance အတွက်) */
     .badge-dist {
         background-color: #17a2b8 !important;
         color: white !important;
     }
 
-    /* Secondary Badge (Shops အတွက်) */
     .badge-shops {
         background-color: #6c757d !important;
         color: white !important;

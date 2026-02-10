@@ -132,7 +132,6 @@ class UserController extends Controller
 
         $data['custom_permissions'] = $request->input('custom_permissions', []);
         $this->userService->updateAdminUser($user, $data);
-
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully!');
     }
 

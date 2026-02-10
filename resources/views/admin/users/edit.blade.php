@@ -88,21 +88,30 @@
         const permissionCbs = document.querySelectorAll('.permission-checkbox');
         const form = roleSelect ? roleSelect.closest('form') : null;
 
-        // Initial State Check
-        if (roleSelect) handleRoleChange(roleSelect.value, false);
+        // ၁။ စာမျက်နှာစဖွင့်ချိန်မှာ Super Admin ဖြစ်နေရင် Disable လုပ်ဖို့ပဲ လိုတယ် (Check/Uncheck မလုပ်ပါ)
+        if (roleSelect && roleSelect.value === 'super-admin') {
+            permissionCbs.forEach(cb => {
+                cb.checked = true;
+                cb.disabled = true;
+            });
+            if (selectAllCb) {
+                selectAllCb.checked = true;
+                selectAllCb.disabled = true;
+            }
+        }
         updateSelectAllState();
 
-        //  Role Change Event
+        // ၂။ Role Dropdown ပြောင်းမှသာ API ဆီကနေ Permission အသစ်တွေ ယူမယ်
         if (roleSelect) {
             roleSelect.addEventListener('change', function() {
-                handleRoleChange(this.value, true);
+                handleRoleChange(this.value);
             });
         }
 
-        async function handleRoleChange(roleName, isManualChange) {
+        async function handleRoleChange(roleName) {
             if (!roleName) return;
 
-            // Super Admin Tick  Disable
+            // Super Admin Case
             if (roleName === 'super-admin') {
                 permissionCbs.forEach(cb => {
                     cb.checked = true;
@@ -112,34 +121,29 @@
                     selectAllCb.checked = true;
                     selectAllCb.disabled = true;
                 }
-            } else {
-                // Role Reset
-                if (isManualChange) {
-                    permissionCbs.forEach(cb => {
-                        cb.checked = false;
-                        cb.disabled = false;
-                    });
-                } else {
-                    permissionCbs.forEach(cb => cb.disabled = false);
-                }
+                return;
+            }
 
-                if (selectAllCb) selectAllCb.disabled = false;
+            // Normal Role Case: Enable checkboxes
+            permissionCbs.forEach(cb => cb.disabled = false);
+            if (selectAllCb) selectAllCb.disabled = false;
 
-                try {
-                    const url = "{{ route('admin.get_role_permissions', ':name') }}".replace(':name', roleName);
-                    const response = await fetch(url);
-                    if (!response.ok) throw new Error('Route not found');
+            try {
+                const url = "{{ route('admin.get_role_permissions', ':name') }}".replace(':name', roleName);
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
 
-                    const permissionNames = await response.json();
-                    permissionCbs.forEach(cb => {
-                        if (permissionNames.includes(cb.value)) {
-                            cb.checked = true;
-                        }
-                    });
-                    updateSelectAllState();
-                } catch (error) {
-                    console.error('Error fetching role permissions:', error);
-                }
+                const permissionNames = await response.json();
+
+                // Role ပြောင်းလိုက်တာနဲ့ Database ကလာတဲ့ Role Permissions အတိုင်း UI ကို Update လုပ်မယ်
+                permissionCbs.forEach(cb => {
+                    cb.checked = permissionNames.includes(cb.value);
+                });
+
+                updateSelectAllState();
+
+            } catch (error) {
+                console.error('Error fetching role permissions:', error);
             }
         }
 
@@ -152,7 +156,6 @@
             });
         }
 
-        // Select All Update
         permissionCbs.forEach(cb => {
             cb.addEventListener('change', updateSelectAllState);
         });
@@ -166,7 +169,6 @@
             selectAllCb.indeterminate = (checkedCount > 0 && checkedCount < enabledCbs.length);
         }
 
-        // Submit  Disabled Checkboxes 
         if (form) {
             form.addEventListener('submit', function() {
                 permissionCbs.forEach(cb => cb.disabled = false);
