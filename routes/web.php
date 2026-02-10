@@ -62,13 +62,7 @@ Route::middleware(['auth', 'AdminAuth'])->prefix('admin')->name('admin.')->group
             ->name('get_role_permissions');
     });
 
-    // --- 3. Activity History (Logs) ---
-    Route::middleware(['permission:view-logs'])->group(function () {
-        Route::get('/activity-history', [ActivityLogController::class, 'index'])->name('logs.index');
-        Route::get('/shops/{id}/logs', [ShopController::class, 'getLogs'])->name('shops.logs');
-    });
-
-    // --- 4. Shops Management ---
+    // --- 3. Shops Management ---
     Route::get('shops/export', [ShopController::class, 'export'])
         ->middleware('permission:shop-export')
         ->name('shops.export');
@@ -76,10 +70,15 @@ Route::middleware(['auth', 'AdminAuth'])->prefix('admin')->name('admin.')->group
         ->middleware('permission:shop-import')
         ->name('shops.import');
     Route::get('shops/export-duplicates', [ShopController::class, 'downloadDuplicates'])
-        ->middleware('permission:shop-export')
+        ->middleware('permission:shop-duplicate-download')
         ->name('shops.download.duplicates');
-
     Route::resource('shops', ShopController::class);
+
+    // --- 4. Activity History (Logs) ---
+    Route::middleware(['permission:view-logs'])->group(function () {
+        Route::get('/activity-history', [ActivityLogController::class, 'index'])->name('logs.index');
+        Route::get('/shops/{id}/logs', [ShopController::class, 'getLogs'])->name('shops.logs');
+    });
 
     // --- 5. Route Planner (Maps) ---
     Route::middleware('permission:route-view')->group(function () {

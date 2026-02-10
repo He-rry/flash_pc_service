@@ -21,7 +21,7 @@
 
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('admin.statuses.index') }}" class="btn btn-light">Back</a>
-                            @can('manage-services')
+                            @can('add-status')
                                 <button type="submit" class="btn btn-success">Save Status</button>
                             @endcan
                         </div>

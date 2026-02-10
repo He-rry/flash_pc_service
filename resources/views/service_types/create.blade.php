@@ -21,7 +21,7 @@
 
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('admin.service-types.index') }}" class="btn btn-light">Back</a>
-                            @can('manage-services')
+                            @can('add-services')
                                 <button type="submit" class="btn btn-success">Save Service Type</button>
                             @endcan
                         </div>

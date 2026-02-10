@@ -27,7 +27,7 @@
                         
                         <div class="d-flex justify-content-between">
                             <a href="{{ route('admin.statuses.index') }}" class="btn btn-light">Cancel</a>
-                            @can('manage-services')
+                            @can('edit-status')
                                 <button type="submit" class="btn btn-primary">Update Status</button>
                             @endcan
                         </div>

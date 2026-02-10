@@ -24,7 +24,7 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Role to Dashboard Redirect
+            // Role to view
             return match (true) {
                 $user->hasRole('log-manager') => redirect()->route('admin.logs.index'),
                 $user->hasRole('editor')      => redirect()->route('admin.shops.create'),

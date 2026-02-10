@@ -38,7 +38,7 @@
                 </div>
             </div>
             <div class="modal-footer bg-light border-0">
-                @can('manage-shops')
+                @can('shop-duplicate-download')
                 <a href="{{ route('admin.shops.download.duplicates') }}" class="btn btn-success btn-sm px-4 font-weight-bold">
                     <i class="fas fa-file-excel mr-1"></i> DOWNLOAD EXCEL
                 </a>

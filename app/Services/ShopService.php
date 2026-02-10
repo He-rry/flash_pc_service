@@ -4,14 +4,15 @@ namespace App\Services;
 
 use App\Interfaces\ShopRepositoryInterface;
 use App\Interfaces\RouterInterface;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\ShopsImport;
-use App\Exports\ShopsExport;
-use App\Exports\DuplicateShopsExport;
 use App\Models\ActivityLog;
+use App\Exports\ShopsExport;
 use Illuminate\Support\Facades\Gate;
+use App\Imports\ShopsImport;
+use Maatwebsite\Excel\Facades\Excel;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\DuplicateShopsExport;
+
 
 class ShopService
 {
@@ -24,15 +25,16 @@ class ShopService
         $this->routeRepo = $routeRepo;
     }
 
-    // --- CRUD Methods ---
     public function store(array $data)
     {
-        Gate::authorize('manage-shops');
         if ($this->repo->checkLocationExists($data['lat'], $data['lng'])) {
             throw new \Exception('ဤတည်နေရာတွင် ဆိုင်ရှိနှင့်ပြီးသား ဖြစ်ပါသည်။');
         }
+
         $data['added_by'] = Auth::id();
-        if (!empty($data['created_at'])) $data['created_at'] = Carbon::parse($data['created_at']);
+        if (!empty($data['created_at'])) {
+            $data['created_at'] = Carbon::parse($data['created_at']);
+        }
 
         $shop = $this->repo->createShop($data);
         $this->logActivity('ADD', "Added new shop: " . $shop->name, $shop->id);
@@ -41,71 +43,48 @@ class ShopService
 
     public function update($id, array $data)
     {
-        Gate::authorize('manage-shops');
         $shop = $this->repo->findShopById($id);
+        if (!$shop) throw new \Exception('ဆိုင်ကို ရှာမတွေ့ပါ။');
 
-        $changes = [];
-        if ($shop->name !== $data['name']) {
-            $changes[] = "Name ({$shop->name} -> {$data['name']})";
-        }
-        if ($shop->region !== $data['region']) {
-            $changes[] = "Region ({$shop->region} -> {$data['region']})";
-        }
-        if ((string)$shop->lat !== (string)$data['lat']) {
-            $changes[] = "Latitude ({$shop->lat} -> {$data['lat']})";
-        }
-        if ((string)$shop->lng !== (string)$data['lng']) {
-            $changes[] = "Longitude ({$shop->lng} -> {$data['lng']})";
-        }
+        // ပြောင်းလဲမှုများကို ခြေရာခံခြင်း
+        $changes = $this->getChanges($shop, $data);
+
         $updatedShop = $this->repo->updateShop($id, $data);
-        if (count($changes) > 0) {
-            $description = "Updated fields: " . implode(', ', $changes);
-        } else {
-            $description = "Updated shop details (No fields changed)";
-        }
-        $this->logActivity('UPDATE', $description, $id);
 
+        $description = count($changes) > 0
+            ? "Updated fields: " . implode(', ', $changes)
+            : "Updated shop details (No fields changed)";
+
+        $this->logActivity('UPDATE', $description, $id);
         return $updatedShop;
     }
+
     public function delete($id)
     {
-        Gate::authorize('delete-shops');
         $shop = $this->repo->findShopById($id);
-        if (!$shop) {
-            throw new \Exception('ဆိုင်ကို ရှာမတွေ့ပါ။');
-        }
+        if (!$shop) throw new \Exception('ဆိုင်ကို ရှာမတွေ့ပါ။');
 
         $name = $shop->name;
         $this->logActivity('DELETE', "Deleted shop: $name (ID: $id)", $id);
-
         $this->repo->deleteShop($id);
-
         return true;
     }
+
+    public function importShops($file, $action = 'skip')
+    {
+        $import = new ShopsImport($action, Auth::id());
+        Excel::import($import, $file);
+        $this->logActivity('IMPORT', "Imported shops from Excel (Action: $action)");
+        return ['duplicates' => $import->duplicateRows];
+    }
+
     public function exportShops(array $filters)
     {
-        Gate::authorize('manage-shops');
         $this->logActivity('EXPORT', "Exported shop list to Excel");
         return Excel::download(new ShopsExport($filters), 'shops_report.xlsx');
     }
-    public function importShops($file, $action = 'skip')
-    {
-        Gate::authorize('manage-shops');
-        $import = new ShopsImport($action, Auth::id());
-        Excel::import($import, $file);
 
-        $this->logActivity('IMPORT', "Imported shops from Excel (Action: $action)");
-
-        return [
-            'duplicates' => $import->duplicateRows
-        ];
-    }
-    //create shop
-    public function create()
-    {
-        return $this->repo->getAllShops();
-    }
-
+    
     public function exportDuplicates($duplicates)
     {
         Gate::authorize('manage-shops');
@@ -113,11 +92,16 @@ class ShopService
         return Excel::download(new DuplicateShopsExport($duplicates, 'yellow'), 'duplicates.xlsx');
     }
 
-    // --- Logging & Logs ---
-    public function getShopLogs($id)
+    private function getChanges($shop, $data)
     {
-        Gate::authorize('view-logs');
-        return ActivityLog::with('user:id,name')->where('shop_id', $id)->latest()->get();
+        $changes = [];
+        $fields = ['name', 'region', 'lat', 'lng'];
+        foreach ($fields as $field) {
+            if (isset($data[$field]) && (string)$shop->$field !== (string)$data[$field]) {
+                $changes[] = ucfirst($field) . " ({$shop->$field} -> {$data[$field]})";
+            }
+        }
+        return $changes;
     }
 
     private function logActivity($action, $description, $shopId = null)
@@ -130,47 +114,9 @@ class ShopService
             'description' => $description,
         ]);
     }
-
-    // --- Waypoints & Routes ---
-    public function parseExcelToWaypoints($file): array
+    public function getShopLogs($id)
     {
-        $sheets = Excel::toArray(null, $file);
-        $rows = $sheets[0] ?? [];
-        if (empty($rows)) return [];
-
-        $start = (isset($rows[0][1]) && is_string($rows[0][1]) && preg_match('/[a-zA-Z]/', $rows[0][1])) ? 1 : 0;
-        $waypoints = [];
-        $uniqueKeys = [];
-
-        foreach (array_slice($rows, $start) as $row) {
-            $vals = array_values($row);
-            $lat = $vals[1] ?? null;
-            $lng = $vals[2] ?? null;
-            if (!is_numeric($lat) || !is_numeric($lng)) continue;
-            $posKey = (float)$lat . '|' . (float)$lng;
-            if (in_array($posKey, $uniqueKeys)) continue;
-            $uniqueKeys[] = $posKey;
-            $waypoints[] = [
-                'name' => $vals[0] ?? null,
-                'lat' => (float)$lat,
-                'lng' => (float)$lng,
-                'region' => $vals[3] ?? null,
-            ];
-        }
-        return $waypoints;
-    }
-
-    public function createRouteFromWaypoints(string $routeName, array $waypoints)
-    {
-        $route = $this->routeRepo->store([
-            'route_name' => $routeName,
-            'waypoints' => $waypoints,
-        ]);
-        $this->logActivity('ROUTE_CREATE', "Created a new map route: $routeName");
-        return $route;
-    }
-    public function list()
-    {
-        return $this->repo->getAllShops();
+        Gate::authorize('view-logs');
+        return $this->repo->getLogsByShopId($id);
     }
 }

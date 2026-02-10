@@ -43,7 +43,7 @@
                     <textarea name="customer_address" class="form-control" rows="2" required></textarea>
                 </div>
             </div>
-            @can('manage-services')
+            @can('add-services')
                 <button type="submit" class="btn btn-success">Save Service</button>
             @endcan
             <a href="{{ route('admin.services.index') }}" class="btn btn-light">Cancel</a>

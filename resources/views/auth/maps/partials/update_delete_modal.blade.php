@@ -37,14 +37,19 @@
                 </form>
 
                 <hr>
-                @can('manage-shops')
+                @can('view-shop-management')
                 <div class="d-flex justify-content-between">
+                    @can('shop-delete')
                     <button type="button" class="btn btn-outline-danger" onclick="deleteShop()">
                         <i class="fas fa-trash-alt mr-1"></i> Delete
                     </button>
+                    @endcan
+
+                    @can('shop-edit')
                     <button type="button" class="btn btn-primary" onclick="updateShop()">
                         <i class="fas fa-save mr-1"></i> Save Changes
                     </button>
+                    @endcan
                 </div>
                 @endcan
             </div>

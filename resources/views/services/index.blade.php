@@ -107,7 +107,7 @@
                             </div>
                             <div class="modal-footer bg-light">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                @can('manage-services')
+                                @can('edit-services')
                                 <a href="{{ route('admin.services.edit', $service->id) }}" class="btn btn-primary">Edit Service</a>
                                 @endcan
                             </div>

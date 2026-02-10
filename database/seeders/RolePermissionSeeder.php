@@ -6,12 +6,14 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
+
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
     {
         app(PermissionRegistrar::class)->forgetCachedPermissions();
         $permissions = [
+            'manage-services',
             'view-services-info',
             'add-services',
             'edit-services',
@@ -28,6 +30,7 @@ class RolePermissionSeeder extends Seeder
             'shop-edit',
             'shop-delete',
             'shop-import',
+            'shop-duplicate-download',
             'shop-export',
             'route-list',
             'route-create',
@@ -45,18 +48,25 @@ class RolePermissionSeeder extends Seeder
             Permission::findOrCreate($permission);
         }
         Role::findOrCreate('super-admin')->syncPermissions(Permission::all());
-        Role::findOrCreate('manager')->syncPermissions([
-            'shop-list',
-            'route-list',
-            'view-services',
-            'view-settings',
-            'shop-export',
-            'shop-import'
-        ]);
+        Role::findOrCreate('manager')->syncPermissions(
+            [
+                'manage-services',
+                'view-services-info',
+                'view-shop-management',
+                'shop-list',
+                'route-list',
+                'view-services',
+                'view-settings',
+                'shop-export',
+                'shop-import'
+            ]
+        );
         Role::findOrCreate('editor')->syncPermissions([
+            'manage-services',
             'shop-list',
             'shop-edit',
             'shop-import',
+            'shop-duplicate-download',
             'view-shop-management',
             'view-services',
             'view-settings',

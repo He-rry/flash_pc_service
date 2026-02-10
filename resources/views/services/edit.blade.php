@@ -48,7 +48,7 @@
                     </select>
                 </div>
             </div>
-            @can('manage-services')
+            @can('edit-services')
                 <button type="submit" class="btn btn-primary">Update Service</button>
             @endcan
             <a href="{{ route('admin.services.index') }}" class="btn btn-light">Cancel</a>
