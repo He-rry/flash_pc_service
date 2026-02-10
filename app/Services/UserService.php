@@ -49,28 +49,25 @@ class UserService
             // Super Admin  Permission clear
             $user->syncPermissions([]);
         }
+
         $this->logActivity('UPDATE_USER', "Updated user: {$user->name}");
 
         return $user;
     }
 
-   private function syncExtraPermissions(User $user, $roleName, array $submittedPermissions)
-{
-    // ၁။ Cache ကို အရင်ရှင်းထုတ်လိုက်ပါ (အရေးကြီးဆုံး)
-    app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+    //helper for permissions sync
+    private function syncExtraPermissions(User $user, $roleName, array $submittedPermissions)
+    {
+        // Current Role  Permission
+        $role = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
+        $rolePermissions = $role ? $role->permissions->pluck('name')->toArray() : [];
 
-    // ၂။ လက်ရှိ Role ရဲ့ Permission တွေကို ယူပါ
-    $role = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
-    $rolePermissions = $role ? $role->permissions->pluck('name')->toArray() : [];
+        // Form Diff Permission Role
+        $extraPermissions = array_diff($submittedPermissions, $rolePermissions);
 
-    // ၃။ Logic: Form ကနေ တက်လာတဲ့အထဲမှာ Role Permission တွေနဲ့ မတူတာ (အပိုတွေ) ကိုပဲ ယူမယ်
-    // ဒါပေမဲ့ array_values သုံးပြီး index ပြန်စီပေးဖို့ လိုပါတယ်
-    $extraPermissions = array_values(array_diff($submittedPermissions, $rolePermissions));
-
-    // ၄။ User ရဲ့ Direct Permission တွေကို အသစ်နဲ့ အကုန်အစားထိုးမယ်
-    // ဒီကောင်က အဟောင်းကို ရှင်းပြီးသားဖြစ်လို့ Checkbox တွေ အသေဖြစ်မနေတော့ပါဘူး
-    $user->syncPermissions($extraPermissions);
-}
+        // Extra  User  Direct Permission
+        $user->syncPermissions($extraPermissions);
+    }
     /**
      * Activity Log 
      */
@@ -87,7 +84,7 @@ class UserService
     public function deleteUser($id)
     {
         if (Auth::id() == $id) {
-            throw new \Exception("You cannot delete your own account.");
+            throw new \Exception("မိမိအကောင့်ကို မိမိပြန်ဖျက်၍ မရနိုင်ပါ။");
         }
         $user = User::findOrFail($id);
         $userName = $user->name;
@@ -106,7 +103,7 @@ class UserService
     public function forceDeleteUser($id)
     {
         if (Auth::id() == $id) {
-            throw new \Exception("You cannot permanently delete your own account.");
+            throw new \Exception("မိမိအကောင့်ကို မိမိအပြီးတိုင် ဖျက်၍ မရနိုင်ပါ။");
         }
         $user = User::withTrashed()->findOrFail($id);
         $userName = $user->name;

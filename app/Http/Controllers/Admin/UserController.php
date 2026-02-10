@@ -8,9 +8,8 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Repositories\UserRepository;
-use App\Services\UserService; // UserService class ရှိရန်လိုအပ်ပါသည်
+use App\Services\UserService;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -92,18 +91,12 @@ class UserController extends Controller
     public function edit(User $user)
     {
         Gate::authorize('manage', $user);
-
         $roles = Role::all();
-
-        // ၁။ System ထဲမှာ ရှိသမျှ Permission အားလုံးကို ယူရပါမယ် (View ထဲမှာ loop ပတ်ဖို့)
         $permissions = \Spatie\Permission\Models\Permission::all();
 
         $userRoles = $user->roles->pluck('name')->toArray();
-
-        // Role မှရသော permission ကော၊ direct ပေးထားသော permission ကော အားလုံးယူခြင်း
         $userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
         $matrix = $this->getPermissionMatrix();
-
         $rolePerms = [];
         foreach ($roles as $role) {
             $rolePerms[$role->name] = $role->permissions->pluck('name')->toArray();

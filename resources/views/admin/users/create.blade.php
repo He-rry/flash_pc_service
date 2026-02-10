@@ -105,8 +105,9 @@
 
         // Initial State Check
         if (roleSelect) handleRoleChange(roleSelect.value, false);
+        updateSelectAllState();
 
-        // Role Change Event
+        //  Role Change Event
         if (roleSelect) {
             roleSelect.addEventListener('change', function() {
                 handleRoleChange(this.value, true);
@@ -115,6 +116,8 @@
 
         async function handleRoleChange(roleName, isManualChange) {
             if (!roleName) return;
+
+            // Super Admin Tick  Disable
             if (roleName === 'super-admin') {
                 permissionCbs.forEach(cb => {
                     cb.checked = true;
@@ -124,35 +127,34 @@
                     selectAllCb.checked = true;
                     selectAllCb.disabled = true;
                 }
-                return;
-            } 
-            permissionCbs.forEach(cb => cb.disabled = false);
-            if (selectAllCb) selectAllCb.disabled = false;
+            } else {
+                // Role Reset
+                if (isManualChange) {
+                    permissionCbs.forEach(cb => {
+                        cb.checked = false;
+                        cb.disabled = false;
+                    });
+                } else {
+                    permissionCbs.forEach(cb => cb.disabled = false);
+                }
 
-            if (isManualChange) {
-                permissionCbs.forEach(cb => cb.checked = false);
-            }
+                if (selectAllCb) selectAllCb.disabled = false;
 
-            try {
-                const url = "{{ route('admin.get_role_permissions', ':name') }}".replace(':name', roleName);
-                
-                // --- ပြင်ဆင်လိုက်သည့်အပိုင်း (Fetch ထည့်သွင်းခြင်း) ---
-                const response = await fetch(url); 
-                if (!response.ok) throw new Error('Network response was not ok');
-                
-                const permissionNames = await response.json();
-                // -------------------------------------------
+                try {
+                    const url = "{{ route('admin.get_role_permissions', ':name') }}".replace(':name', roleName);
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error('Route not found');
 
-                // 3. Database မှလာသော Permission list အတိုင်း Checkbox များကို Update လုပ်ခြင်း
-                permissionCbs.forEach(cb => {
-                    // ပါဝင်သော permission ကိုသာ checked လုပ်ပြီး ကျန်တာကို uncheck လုပ်မည်
-                    cb.checked = permissionNames.includes(cb.value);
-                });
-
-                updateSelectAllState();
-
-            } catch (error) {
-                console.error('Error fetching role permissions:', error);
+                    const permissionNames = await response.json();
+                    permissionCbs.forEach(cb => {
+                        if (permissionNames.includes(cb.value)) {
+                            cb.checked = true;
+                        }
+                    });
+                    updateSelectAllState();
+                } catch (error) {
+                    console.error('Error fetching role permissions:', error);
+                }
             }
         }
 
@@ -165,7 +167,7 @@
             });
         }
 
-        // တစ်ခုချင်းစီနှိပ်လျှင် Select All state ကို update လုပ်ခြင်း
+        // Select All Update
         permissionCbs.forEach(cb => {
             cb.addEventListener('change', updateSelectAllState);
         });
@@ -179,7 +181,7 @@
             selectAllCb.indeterminate = (checkedCount > 0 && checkedCount < enabledCbs.length);
         }
 
-        // Form Submit လုပ်လျှင် Disabled ဖြစ်နေသော value များပါ ပါသွားစေရန်
+        // Submit  Disabled Checkboxes 
         if (form) {
             form.addEventListener('submit', function() {
                 permissionCbs.forEach(cb => cb.disabled = false);
