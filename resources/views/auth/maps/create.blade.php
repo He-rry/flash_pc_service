@@ -107,7 +107,10 @@
             </div>
         </div>
         @endcan
+
+        
         <div class="col-lg-4">
+            @can('view-filters')
             <div class="custom-card p-4 h-100">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="section-title mb-0"><i class="fas fa-filter mr-2"></i>Data Filters</h6>
@@ -159,8 +162,9 @@
                     </button>
                 </div>
             </div>
+            @endcan
         </div>
-
+     
     </div>
 </div>
 </div>

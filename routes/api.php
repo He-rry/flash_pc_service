@@ -15,11 +15,11 @@ use App\Http\Controllers\ServiceController;
 
 Route::prefix('v1')->group(function () {
 
-    // --- 1. Public API (ဘယ်သူမဆို သုံးနိုင်သည်) ---
+    // --- Public API ---
     Route::get('/track/{ticket_id}', [ServiceController::class, 'apiTrack']);
 
-    // --- 2. Protected API (Auth လိုအပ်သည်) ---
-    // Sanctum သည် Web Session ရော Token ကိုပါ လက်ခံသောကြောင့် ပိုမိုကောင်းမွန်သည်
+    // ---  Protected API ) ---
+    // Sanctum 
     Route::middleware('auth:sanctum')->group(function () {
 
         // --- Shop Resources ---

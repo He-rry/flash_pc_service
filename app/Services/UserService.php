@@ -3,111 +3,129 @@
 namespace App\Services;
 
 use App\Models\User;
-use App\Models\ActivityLog;
+use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\PermissionRegistrar;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Permission\Models\Permission;
 
 class UserService
 {
+    protected $userRepo;
+
+    public function __construct(UserRepository $userRepo)
+    {
+        $this->userRepo = $userRepo;
+    }
+
+    // Controller Matrix
+    public function getPermissionMatrix()
+    {
+        $modules = ['shops' => 'Shops', 'routes' => 'Routes', 'logs' => 'Logs', 'services' => 'Services', 'users' => 'Users', 'settings' => 'Settings'];
+        $actions = ['view', 'create', 'update', 'delete', 'import', 'export'];
+        $matrix = [];
+
+        foreach ($modules as $key => $label) {
+            foreach ($actions as $act) {
+                $permName = "$act-$key";
+                if (Permission::where('name', $permName)->exists()) {
+                    $matrix[$label][] = ['name' => $permName, 'label' => ucfirst($act)];
+                }
+            }
+        }
+        return $matrix;
+    }
+   //Mapping role for js
+    public function getRolePermissionsMap()
+    {
+        $roles = $this->userRepo->getAllRoles();
+        $rolePerms = [];
+        foreach ($roles as $role) {
+            $rolePerms[$role->name] = $role->permissions->pluck('name')->toArray();
+        }
+        return $rolePerms;
+    }
+
     public function createAdminUser(array $data)
     {
-        //  User Create 
-        $user = User::create([
+        $userData = [
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
-        ]);
+        ];
+        $user = $this->userRepo->create($userData);
+        // Role Assign
         $user->assignRole($data['role']);
+
+        // Permission Sync
         if ($data['role'] !== 'super-admin') {
             $this->syncExtraPermissions($user, $data['role'], $data['custom_permissions'] ?? []);
         } else {
             $user->syncPermissions([]);
         }
 
-        $this->logActivity('CREATE_USER', "Created user: {$user->name} with role: {$data['role']}");
+        $this->userRepo->logActivity('CREATE_USER', "Created user: {$user->name} with role: {$data['role']}");
 
         return $user;
     }
 
-    /**
-     * Edit Admin
-     */
     public function updateAdminUser(User $user, array $data)
     {
-        $user->update([
+        $updateData = [
             'name' => $data['name'],
             'email' => $data['email'],
-        ]);
+        ];
 
-        // Role  Sync
+        if (!empty($data['password'])) {
+            $updateData['password'] = Hash::make($data['password']);
+        }
+        $this->userRepo->update($user, $updateData);
         $user->syncRoles([$data['role']]);
-
-        // Super Admin Extra Permissions Sync
         if ($data['role'] !== 'super-admin') {
             $this->syncExtraPermissions($user, $data['role'], $data['custom_permissions'] ?? []);
         } else {
-            // Super Admin  Permission clear
             $user->syncPermissions([]);
         }
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $this->logActivity('UPDATE_USER', "Updated user: {$user->name}");
+        $this->userRepo->logActivity('UPDATE_USER', "Updated user: {$user->name}");
 
         return $user;
     }
 
-    //helper for permissions sync
     private function syncExtraPermissions(User $user, $roleName, array $submittedPermissions)
     {
-        // Current Role  Permission
-        $role = \Spatie\Permission\Models\Role::where('name', $roleName)->first();
-        $rolePermissions = $role ? $role->permissions->pluck('name')->toArray() : [];
-
-        // Form Diff Permission Role
-        $extraPermissions = array_diff($submittedPermissions, $rolePermissions);
-
-        // Extra  User  Direct Permission
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        $rolePermissions = $this->userRepo->getPermissionsByRoleName($roleName)->toArray();
+        $extraPermissions = array_values(array_diff($submittedPermissions, $rolePermissions));
         $user->syncPermissions($extraPermissions);
     }
-    /**
-     * Activity Log 
-     */
-    private function logActivity($action, $description)
-    {
-        ActivityLog::create([
-            'user_id' => Auth::id(),
-            'action' => $action,
-            'module' => 'USER_MANAGEMENT',
-            'description' => $description,
-            'ip_address' => request()->ip(),
-        ]);
-    }
+
     public function deleteUser($id)
     {
-        if (Auth::id() == $id) {
-            throw new \Exception("မိမိအကောင့်ကို မိမိပြန်ဖျက်၍ မရနိုင်ပါ။");
-        }
-        $user = User::findOrFail($id);
-        $userName = $user->name;
-        $user->delete();
-        $this->logActivity('DELETE_USER', "Deleted user: {$userName}");
+        if (Auth::id() == $id) throw new \Exception("You cannot delete your own account.");
+        
+        $user = $this->userRepo->find($id);
+        $this->userRepo->delete($user);
+        $this->userRepo->logActivity('DELETE_USER', "Deleted user: {$user->name}");
         return true;
     }
+
     public function restoreUser($id)
     {
-        $user = User::withTrashed()->findOrFail($id);
-        $user->restore();
-        $this->logActivity('RESTORE_USER', "Restored user: {$user->name}");
-
+        $user = $this->userRepo->restore($id);
+        $this->userRepo->logActivity('RESTORE_USER', "Restored user: {$user->name}");
         return $user;
     }
+
     public function forceDeleteUser($id)
     {
-        if (Auth::id() == $id) {
-            throw new \Exception("မိမိအကောင့်ကို မိမိအပြီးတိုင် ဖျက်၍ မရနိုင်ပါ။");
-        }
-        $user = User::withTrashed()->findOrFail($id);
-        $userName = $user->name;
-        $this->logActivity('FORCE_DELETE_USER', "Permanently deleted user: {$userName}");
-        return $user->forceDelete();
+        if (Auth::id() == $id) throw new \Exception("You cannot permanently delete your own account.");
+        
+        $user = User::withTrashed()->findOrFail($id); // For logging name before delete
+        $name = $user->name;
+        $this->userRepo->forceDelete($id);
+        $this->userRepo->logActivity('FORCE_DELETE_USER', "Permanently deleted user: {$name}");
+        return true;
     }
 }

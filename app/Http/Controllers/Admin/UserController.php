@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\User;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\Models\Permission;
 use App\Repositories\UserRepository;
 use App\Services\UserService;
+use App\Http\Requests\StoreUserRequest; // New Request Class
+use App\Http\Requests\UpdateUserRequest; // New Request Class
+use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 
 class UserController extends Controller
@@ -24,65 +23,29 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::withTrashed()->with('roles')->latest()->paginate(15);
+        $users = $this->userRepo->getPaginatedUsers();
         return view('admin.users.index', compact('users'));
-    }
-    private function getPermissionMatrix()
-    {
-        $modules = [
-            'shops'    => 'Shops',
-            'routes'   => 'Routes',
-            'logs'     => 'Logs',
-            'services' => 'Services',
-            'users'    => 'Users',
-            'settings' => 'Settings'
-        ];
-
-        $actions = ['view', 'create', 'update', 'delete', 'import', 'export'];
-
-        $matrix = [];
-        foreach ($modules as $key => $label) {
-            foreach ($actions as $act) {
-                $permName = "$act-$key";
-                // DB ထဲမှာရှိတဲ့ Permission တွေကိုပဲ matrix ထဲထည့်ပါမယ် (အသစ်ထပ်မဆောက်တော့ပါ)
-                if (Permission::where('name', $permName)->exists()) {
-                    $matrix[$label][] = [
-                        'name' => $permName,
-                        'label' => ucfirst($act)
-                    ];
-                }
-            }
-        }
-        return $matrix;
     }
 
     public function create()
     {
-        $roles = Role::all();
-        $matrix = $this->getPermissionMatrix();
-        $permissions = Permission::all();
+        $roles = $this->userRepo->getAllRoles();
+        $permissions = $this->userRepo->getAllPermissions();
 
-        // Client-side JS အတွက် Role တစ်ခုချင်းစီ၏ Permissions များကို Map လုပ်ထားခြင်း
-        $rolePerms = [];
-        foreach ($roles as $role) {
-            $rolePerms[$role->name] = $role->permissions->pluck('name')->toArray();
-        }
+        // Logic Service
+        $matrix = $this->userService->getPermissionMatrix();
+        $rolePerms = $this->userService->getRolePermissionsMap();
 
         return view('admin.users.create', compact('roles', 'matrix', 'permissions', 'rolePerms'));
     }
 
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|string|exists:roles,name',
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'string'
-        ]);
+        // Validation 
+        $data = $request->validated();
+        // Checkbox empty array handle
+        $data['custom_permissions'] = $request->input('custom_permissions', []);
 
-        // Service class ကိုအသုံးပြု၍ User ကို Create လုပ်ပါသည်
         $this->userService->createAdminUser($data);
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully');
@@ -91,16 +54,16 @@ class UserController extends Controller
     public function edit(User $user)
     {
         Gate::authorize('manage', $user);
-        $roles = Role::all();
-        $permissions = \Spatie\Permission\Models\Permission::all();
+
+        $roles = $this->userRepo->getAllRoles();
+        $permissions = $this->userRepo->getAllPermissions();
 
         $userRoles = $user->roles->pluck('name')->toArray();
         $userPermissions = $user->getAllPermissions()->pluck('name')->toArray();
-        $matrix = $this->getPermissionMatrix();
-        $rolePerms = [];
-        foreach ($roles as $role) {
-            $rolePerms[$role->name] = $role->permissions->pluck('name')->toArray();
-        }
+
+        $matrix = $this->userService->getPermissionMatrix();
+        $rolePerms = $this->userService->getRolePermissionsMap();
+
         return view('admin.users.edit', compact(
             'user',
             'roles',
@@ -112,28 +75,22 @@ class UserController extends Controller
         ));
     }
 
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
-        $data = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
-            'password' => 'nullable|string|min:6|confirmed',
-            'role' => 'required|string|exists:roles,name',
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'string'
-        ]);
-
+        $data = $request->validated();
         $data['custom_permissions'] = $request->input('custom_permissions', []);
+
         $this->userService->updateAdminUser($user, $data);
+
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully!');
     }
 
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
-
-        // Policy
+        // Policy Check User Object
+        $user = $this->userRepo->find($id);
         Gate::authorize('delete', $user);
+
         try {
             $this->userService->deleteUser($id);
             return redirect()->route('admin.users.index')->with('success', 'User has been deleted successfully.');
@@ -142,14 +99,13 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * AJAX အတွက် Role အလိုက် Permission များကို json ပြန်ပေးရန်
-     */
+    // AJAX Call
     public function getRolePermissions($roleName)
     {
-        $role = Role::where('name', $roleName)->with('permissions')->first();
-        return response()->json($role ? $role->permissions->pluck('name') : []);
+        $permissions = $this->userRepo->getPermissionsByRoleName($roleName);
+        return response()->json($permissions);
     }
+
     public function restore($id)
     {
         try {

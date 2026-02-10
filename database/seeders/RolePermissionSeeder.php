@@ -6,8 +6,6 @@ use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
-use App\Models\User;
-
 class RolePermissionSeeder extends Seeder
 {
     public function run(): void
