@@ -24,7 +24,7 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Role အလိုက် သက်ဆိုင်ရာ Page ဆီသို့ Redirect လုပ်ခြင်း
+            // Role to Dashboard Redirect
             return match (true) {
                 $user->hasRole('log-manager') => redirect()->route('admin.logs.index'),
                 $user->hasRole('editor')      => redirect()->route('admin.shops.create'),
