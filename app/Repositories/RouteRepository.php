@@ -1,23 +1,25 @@
 <?php
 namespace App\Repositories;
 use App\Interfaces\RouterInterface;
+use App\Models\Route;
+
 
 class RouteRepository implements RouterInterface
 {
     public function getAll()
     {
-        return \App\Models\Route::all();
+        return Route::all();
     }
     public function find($id)
     {
-        return \App\Models\Route::find($id);
+        return Route::find($id);
     }
     public function store(array $data)
     {
-        return \App\Models\Route::create($data);
+        return Route::create($data);
     }
     public function delete($id)
     {
-        return \App\Models\Route::destroy($id);
+        return Route::destroy($id);
     }
 }

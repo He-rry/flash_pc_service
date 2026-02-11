@@ -2,6 +2,19 @@
 
 namespace App\Providers;
 
+use App\Repositories\RouteRepository;
+use App\Repositories\ServiceRepository;
+use App\Repositories\ServiceTypeRepository;
+use App\Repositories\StatusRepository;
+use App\Repositories\ShopRepository;
+use App\Repositories\RoutePlannerRepository;
+use App\Interfaces\ServiceInterface;
+use App\Interfaces\RouterInterface;
+use App\Interfaces\ServiceTypeInterface;
+use App\Interfaces\StatusRepositoryInterface;
+use App\Interfaces\ShopRepositoryInterface;
+use App\Interfaces\RoutePlannerRepositoryInterface;
+
 use Illuminate\Support\ServiceProvider;
 
 class RepositoryServiceProvider extends ServiceProvider
@@ -9,35 +22,34 @@ class RepositoryServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(
-            \App\Interfaces\ServiceInterface::class,
-            \App\Repositories\ServiceRepository::class
+            ServiceInterface::class,
+            ServiceRepository::class
         );
 
         $this->app->bind(
-            \App\Interfaces\RouterInterface::class,
-            \App\Repositories\RouteRepository::class
+            RouterInterface::class,
+            RouteRepository::class
         );
 
         $this->app->bind(
-            \App\Interfaces\ServiceTypeInterface::class,
-            \App\Repositories\ServiceTypeRepository::class
+            ServiceTypeInterface::class,
+            ServiceTypeRepository::class
         );
 
         $this->app->bind(
-            \App\Interfaces\StatusRepositoryInterface::class,
-            \App\Repositories\StatusRepository::class
+            StatusRepositoryInterface::class,
+            StatusRepository::class
         );
 
         $this->app->bind(
-            \App\Interfaces\ShopRepositoryInterface::class,
-            \App\Repositories\ShopRepository::class
+            ShopRepositoryInterface::class,
+            ShopRepository::class
         );
 
         $this->app->bind(
-            \App\Interfaces\RoutePlannerRepositoryInterface::class,
-            \App\Repositories\RoutePlannerRepository::class
+            RoutePlannerRepositoryInterface::class,
+            RoutePlannerRepository::class
         );
-        
     }
 
     public function boot(): void

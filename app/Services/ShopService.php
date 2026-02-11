@@ -45,8 +45,6 @@ class ShopService
     {
         $shop = $this->repo->findShopById($id);
         if (!$shop) throw new \Exception('ဆိုင်ကို ရှာမတွေ့ပါ။');
-
-        // ပြောင်းလဲမှုများကို ခြေရာခံခြင်း
         $changes = $this->getChanges($shop, $data);
 
         $updatedShop = $this->repo->updateShop($id, $data);
@@ -84,7 +82,7 @@ class ShopService
         return Excel::download(new ShopsExport($filters), 'shops_report.xlsx');
     }
 
-    
+
     public function exportDuplicates($duplicates)
     {
         Gate::authorize('manage-shops');

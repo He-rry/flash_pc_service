@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Gate;
 use App\Models\User;
 
 
+
 class AuthServiceProvider extends ServiceProvider
 {
     public function boot(): void
@@ -18,7 +19,7 @@ class AuthServiceProvider extends ServiceProvider
     {
         // Super Admin: full access
         Gate::before(function ($user, $ability) {
-            if ($user->role === \App\Models\User::ROLE_SUPER_ADMIN) {
+            if ($user->role === User::ROLE_SUPER_ADMIN) {
                 return true;
             }
             if (method_exists($user, 'hasRole') && $user->hasRole('super-admin')) {

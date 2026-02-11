@@ -3,34 +3,22 @@
 namespace App\Http\Controllers;
 
 use App\Services\RouteService;
-use App\Http\Requests\StoreShopRequest;
 use App\Http\Requests\StoreRouteRequest;
-use App\Services\ShopService;
 use Illuminate\Support\Facades\Gate;
 
 class RouteController extends Controller
 {
     protected RouteService $routeService;
-    protected ShopService $shopService;
-    public function __construct(RouteService $routeService, ShopService $shopService)
+    public function __construct(RouteService $routeService)
     {
         $this->routeService = $routeService;
-        $this->shopService = $shopService;
         $this->middleware('permission:manage-routes')->only(['store', 'destroy']);
     }
 
     public function index()
     {
-        $shops = $this->shopService->list();
         $routes = $this->routeService->list();
-
-        return view('auth.maps.index', compact('shops', 'routes'));
-    }
-    public function create(StoreShopRequest $request)
-    {
-        $this->shopService->create($request->validated());
-
-        return redirect()->route('maps.index')->with('success', 'Shop registered successfully!');
+        return view('auth.maps.index', compact('routes'));
     }
     public function store(StoreRouteRequest $request)
     {

@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Repositories\UserRepository;
 use App\Services\UserService;
-use App\Http\Requests\StoreUserRequest; // New Request Class
-use App\Http\Requests\UpdateUserRequest; // New Request Class
+use App\Http\Requests\StoreUserRequest; 
+use App\Http\Requests\UpdateUserRequest; 
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 

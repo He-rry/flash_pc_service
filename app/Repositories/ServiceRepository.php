@@ -36,7 +36,7 @@ class ServiceRepository implements ServiceInterface {
         return Service::where('customer_phone', $phone)->with('status')->latest()->first();
     }
 
-    // Status နဲ့ Type တွေကို View မှာ ပြဖို့အတွက်
+    // Status and Type
     public function getAllStatuses() { return Status::all(); }
     public function getAllServiceTypes() { return ServiceType::all(); }
 }
