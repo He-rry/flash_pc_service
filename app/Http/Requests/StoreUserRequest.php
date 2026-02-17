@@ -20,7 +20,8 @@ class StoreUserRequest extends FormRequest
             'role' => 'required|string|exists:roles,name',
             'permissions' => 'nullable|array',
             'permissions.*' => 'string',
-            'custom_permissions' => 'nullable|array' // custom_permissions allow
+            'custom_permissions' => 'nullable|array'
         ];
     }
+    public function messages() {}
 }

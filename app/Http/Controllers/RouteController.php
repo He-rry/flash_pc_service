@@ -29,7 +29,6 @@ class RouteController extends Controller
 
         return redirect()->back()->with('success', 'Route saved successfully!');
     }
-
     public function destroy($id)
     {
         Gate::authorize('manage-routes');
