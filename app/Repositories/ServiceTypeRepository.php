@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Interfaces\ServiceTypeInterface;
 use App\Models\ServiceType;
+use Illuminate\Support\Facades\DB;
 
 class ServiceTypeRepository implements ServiceTypeInterface
 {
@@ -16,7 +17,8 @@ class ServiceTypeRepository implements ServiceTypeInterface
 
     public function getAllServiceTypes()
     {
-        return $this->model->all();
+        $result = DB::select("CALL sp_GetAllServiceTypes()");
+        return ServiceType::hydrate($result);
     }
 
     public function findServiceTypeById($id)
@@ -26,19 +28,21 @@ class ServiceTypeRepository implements ServiceTypeInterface
 
     public function createServiceType(array $data)
     {
-        return $this->model->create($data);
+        return DB::statement("CALL sp_CreateServiceType(?)", [
+            $data['service_name']
+        ]);
     }
 
     public function updateServiceType($id, array $data)
     {
-        $item = $this->model->findOrFail($id);
-        $item->update($data);
-        return $item;
+        return DB::statement("CALL sp_UpdateServiceType(?, ?)", [
+            $id,
+            $data['service_name']
+        ]);
     }
 
     public function deleteServiceType($id)
     {
-        $item = $this->model->findOrFail($id);
-        return $item->delete();
+       return DB::statement("CALL sp_DeleteServiceType(?)", [$id]);
     }
 }

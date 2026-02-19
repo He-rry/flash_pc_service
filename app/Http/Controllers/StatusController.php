@@ -35,7 +35,7 @@ class StatusController extends Controller
 
         $this->service->create($validatedData);
 
-        return redirect()->route('statuses.index')->with('success', 'Status created!');
+        return redirect()->route('admin.statuses.index')->with('success', 'Status created!');
     }
 
     public function edit($id)

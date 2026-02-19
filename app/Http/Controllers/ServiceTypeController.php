@@ -26,7 +26,7 @@ class ServiceTypeController extends Controller
     public function create()
     {
         Gate::authorize('manage-services');
-        return view('admin.service_types.create');
+        return view('service_types.create');
     }
 
     public function store(Request $request)

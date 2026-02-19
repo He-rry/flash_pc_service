@@ -8,7 +8,7 @@ class StoreUserRequest extends FormRequest
 {
     public function authorize()
     {
-        return true; // လိုအပ်ရင် Policy စစ်ပါ
+        return true;
     }
 
     public function rules()
