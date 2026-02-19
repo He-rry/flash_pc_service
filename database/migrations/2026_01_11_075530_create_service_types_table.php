@@ -48,6 +48,7 @@ return new class extends Migration
         Schema::dropIfExists('service_types');
         DB::unprepared("DROP PROCEDURE IF EXISTS sp_UpdateServiceType");
         DB::unprepared("DROP PROCEDURE IF EXISTS sp_DeleteServiceType");
+        DB::unprepared("DROP PROCEDURE IF EXISTS sp_CreateServiceType");
         
     }
 };
