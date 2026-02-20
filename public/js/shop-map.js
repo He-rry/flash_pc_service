@@ -5,6 +5,7 @@ const isLeafletReady = () => typeof L !== 'undefined';
 
 document.addEventListener('DOMContentLoaded', function () {
     if (!isLeafletReady()) return;
+    window.appConfig = window.appConfig || { apiUrl: '/api/v1/shops', permissions: [] };
 
     const mapElement = document.getElementById('map');
     if (mapElement) {
@@ -12,7 +13,6 @@ document.addEventListener('DOMContentLoaded', function () {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         markerLayer = L.layerGroup().addTo(map);
 
-        // မြေပုံပေါ်ကလစ်နှိပ်လျှင် ဆိုင်အသစ်အတွက် နေရာမှတ်ခြင်း
         map.on('click', (e) => {
             const { lat, lng } = e.latlng;
             const latField = document.getElementById('form_lat');
@@ -30,9 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => { map.invalidateSize(); }, 500);
     }
 });
-
 // --- First JS မှ ယူထားသော Logic များ ---
-
 async function fetchData(page = 1) {
     const searchVal = document.getElementById('mapSearch')?.value || '';
     const regionVal = document.getElementById('regionFilter')?.value || '';
@@ -42,40 +40,39 @@ async function fetchData(page = 1) {
     const periodVal = periodElement ? periodElement.value : 'all';
 
     const params = new URLSearchParams({
-        search: searchVal,
-        region: regionVal,
-        period: periodVal,
-        from_date: fromDate,
-        to_date: toDate,
-        page: page
+        search: searchVal, region: regionVal, period: periodVal,
+        from_date: fromDate, to_date: toDate, page: page
     });
 
-    // Export Link Update & Disabled State (Second JS style)
     const exportBtn = document.getElementById('exportBtn');
-    if (exportBtn) {
+    if (exportBtn && window.appConfig.exportUrl) {
         exportBtn.href = `${window.appConfig.exportUrl}?${params.toString()}`;
     }
 
     try {
         const response = await fetch(`${window.appConfig.apiUrl}?${params.toString()}`, {
             method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin' // API တွင် Sanctum cookie အလုပ်လုပ်စေရန်
         });
 
         const result = await response.json();
         const total = result.total || 0;
 
-        // Update Count Badge
+        // API မှ ပေးပို့သော Permissions များကို JS format သို့ ပြောင်းလဲသိမ်းဆည်းခြင်း
+        if (result.user_permissions) {
+            window.appConfig.permissions = [];
+            if (result.user_permissions.can_view_logs) window.appConfig.permissions.push('view-logs');
+            if (result.user_permissions.can_edit_shop) window.appConfig.permissions.push('shop-edit');
+            if (result.user_permissions.can_delete_shop) window.appConfig.permissions.push('shop-delete');
+        }
+
         const countBadge = document.getElementById('filterCountBadge');
         if (countBadge) {
             countBadge.innerText = `${total} Shops`;
             countBadge.className = `badge shadow-sm ${total === 0 ? 'badge-danger' : 'badge-primary'}`;
         }
 
-        // Export Button State logic
         if (exportBtn) {
             exportBtn.classList.toggle('disabled', total === 0);
             exportBtn.style.pointerEvents = total === 0 ? 'none' : 'auto';
@@ -124,7 +121,7 @@ function renderTable(shops) {
             </td>`;
         rowHtml += `<td><span class="text-monospace small bg-light px-2 py-1 rounded border">${parseFloat(shop.lat).toFixed(5)}, ${parseFloat(shop.lng).toFixed(5)}</span></td>`;
         rowHtml += `<td class="text-center"><span class="badge badge-light border">${shop.region || '-'}</span></td>`;
-        
+
         if (canViewLogs) {
             rowHtml += `<td class="text-center"><span class="badge badge-info-soft text-info px-2 py-1" style="background-color: #e0f2ff;"><i class="fas fa-user-check mr-1 small"></i>${adminName}</span></td>`;
         }
@@ -183,7 +180,7 @@ function enableMapPicker() {
 
     map.on('click', onMapClick);
     editMarker.on('dragend', (e) => finalizeSelection(e.target.getLatLng()));
-    
+
     document.getElementById('map')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     map.flyTo([lat, lng], 18, { animate: true, duration: 1.5 });
 }
@@ -264,10 +261,16 @@ async function updateShop() {
     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     try {
-        const response = await fetch(`/admin/shops/${payload.id}`, {
+        // API url အသစ်သို့ ပြောင်းလဲထားသည်
+        const response = await fetch(`/api/v1/shops/${payload.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
-            body: JSON.stringify(payload)
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': token,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(payload),
+            credentials: 'same-origin'
         });
 
         if (response.ok) {
@@ -287,9 +290,11 @@ async function deleteShop() {
     const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     try {
-        const response = await fetch(`/admin/shops/${id}`, {
+        // API url အသစ်သို့ ပြောင်းလဲထားသည်
+        const response = await fetch(`/api/v1/shops/${id}`, {
             method: 'DELETE',
-            headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' }
+            headers: { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' },
+            credentials: 'same-origin'
         });
 
         if (response.ok) {
@@ -316,15 +321,28 @@ async function showShopLogs(shopId, shopName) {
     $('#shopLogModal').modal('show');
 
     try {
-        const response = await fetch(`/admin/shops/${shopId}/logs`);
-        const logs = await response.json();
+        const response = await fetch(`/api/v1/activity-logs?shop_id=${shopId}`, {
+            headers: { 'Accept': 'application/json' },
+            credentials: 'same-origin'
+        });
+
+        if (!response.ok) throw new Error('Network response was not ok');
+
+        const result = await response.json();
+        // Pagination ကြောင့် data သည် result.data ထဲတွင် ရှိနေပါသည်
+        const logs = result.data || []; 
+
         if (logs.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5">မှတ်တမ်းမရှိသေးပါ။</td></tr>';
             return;
         }
+
         tbody.innerHTML = logs.map(log => {
-            const badgeClass = { 'ADD': 'bg-success', 'UPDATE': 'bg-warning', 'DELETE': 'bg-danger', 'IMPORT': 'bg-info' }[log.action] || 'bg-light';
-            const adminInitial = log.user ? log.user.name.charAt(0) : 'S';
+            const badgeClass = { 'ADD': 'bg-success', 'UPDATE': 'bg-warning', 'DELETE': 'bg-danger', 'IMPORT': 'bg-info' }[log.action] || 'bg-secondary';
+            
+            // log.user သို့မဟုတ် log.user.name မရှိလျှင် 'System' ဟုပြရန် (Null Safety)
+            const userName = (log.user && log.user.name) ? log.user.name : 'System';
+            const adminInitial = userName.charAt(0);
 
             return `
                 <tr>
@@ -337,14 +355,15 @@ async function showShopLogs(shopId, shopName) {
                             <div class="avatar-sm mr-2 bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width:25px; height:25px; font-size:10px;">
                                 ${adminInitial}
                             </div>
-                            <span class="small font-weight-bold">${log.user ? log.user.name : 'System'}</span>
+                            <span class="small font-weight-bold">${userName}</span>
                         </div>
                     </td>
                     <td><span class="badge ${badgeClass} border text-white" style="font-size: 0.7rem;">${log.action}</span></td>
-                    <td class="small text-wrap" style="max-width: 250px;">${log.description}</td>
+                    <td class="small text-wrap" style="max-width: 250px;">${log.description || ''}</td>
                 </tr>`;
         }).join('');
     } catch (e) {
+        console.error('Detailed Error:', e); // Console တွင် အမှန်တကယ်ဖြစ်နေသော error ကို စစ်ဆေးရန်
         tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-danger">Error fetching logs.</td></tr>';
     }
 }

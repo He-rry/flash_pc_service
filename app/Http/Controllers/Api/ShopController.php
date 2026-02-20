@@ -4,33 +4,64 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Shop;
+use App\Services\ShopService;
+use App\Http\Requests\StoreShopRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ShopController extends Controller
 {
-    public function index(Request $request)
+    protected $service;
+
+    public function __construct(ShopService $service)
     {
-        $query = Shop::with('admin')->applyFilters($request->all())->latest();
+        $this->service = $service;
+    }
+    public function index(Request $request)
+{
+    // 1. Filter လုပ်ထားတဲ့ Query ကို အရင်ယူမယ်
+    $query = Shop::with('admin')->applyFilters($request->all())->latest();
+    $allFiltered = (clone $query)->get(); 
+    $paginated = $query->paginate(10);
 
-        $allFiltered = (clone $query)->get();
-        $paginated = $query->paginate(10);
-        /** @var \App\Models\User $user */ // 
-        $user = Auth::user();
-        $permissions = [
-            'can_view_logs' => $user ? $user->can('view-logs') : false,
-            'can_edit_shop' => $user ? $user->can('shop-edit') : false,
-            'can_delete_shop' => $user ? $user->can('shop-delete') : false,
-            'can_import' => $user ? $user->can('shop-import') : false,
-            'can_export' => $user ? $user->can('shop-export') : false,
-        ];
+    $user = Auth::user();
+    $permissions = [
+        'can_view_logs' => $user ? $user->can('view-logs') : false,
+        'can_edit_shop' => $user ? $user->can('shop-edit') : false,
+        'can_delete_shop' => $user ? $user->can('shop-delete') : false,
+    ];
 
-        return response()->json(array_merge(
-            $paginated->toArray(),
-            [
-                'all_filtered' => $allFiltered,
-                'user_permissions' => $permissions // Permission data
-            ]
-        ));
+    return response()->json([
+        'data' => $paginated->items(),          // Table အတွက် (၁၀ ခု)
+        'all_filtered' => $allFiltered,         // Map အတွက် (၄၀ လုံး)
+        'total' => $paginated->total(),
+        'last_page' => $paginated->lastPage(),
+        'links' => $paginated->linkCollection(),
+        'user_permissions' => $permissions
+    ]);
+}
+
+    public function store(StoreShopRequest $request)
+    {
+        $shop = $this->service->store($request->validated());
+        return response()->json(['status' => 'success', 'data' => $shop], 201);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $shop = $this->service->update($id, $request->all());
+        return response()->json(['status' => 'success', 'data' => $shop]);
+    }
+
+    public function destroy($id)
+    {
+        $this->service->delete($id);
+        return response()->json(['status' => 'success', 'message' => 'Deleted successfully']);
+    }
+
+    public function show($id) // logs အတွက် show method ကို သုံးခြင်း သို့မဟုတ် သီးသန့် logs method
+    {
+        $logs = $this->service->getShopLogs($id);
+        return response()->json($logs);
     }
 }

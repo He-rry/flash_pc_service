@@ -7,7 +7,6 @@ use App\Services\ShopService;
 use App\Http\Requests\StoreShopRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Auth;
 
 class ShopController extends Controller
 {
@@ -26,11 +25,13 @@ class ShopController extends Controller
 
     public function create(Request $request)
     {
-        $shops = $this->repo->getFilteredShops($request->all());
-        $regions = $this->repo->getDistinctRegions();
-        $permissions = Auth::user()->getAllPermissions()->pluck('name')->toArray();
 
-        return view('auth.maps.create', compact('shops', 'regions', 'permissions'));
+        $data = $this->service->create($request->all());
+        return view('auth.maps.create', [
+            'shops'       => $data['shops'],
+            'regions'     => $data['regions'],
+            'permissions' => $data['permissions'],
+        ]);
     }
 
     public function store(StoreShopRequest $request)

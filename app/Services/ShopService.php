@@ -24,6 +24,13 @@ class ShopService
         $this->repo = $repo;
         $this->routeRepo = $routeRepo;
     }
+    public function create(array $filters){
+        return [
+         'shops' => $this->repo->getFilteredShops($filters),
+         'regions' => $this->repo->getDistinctRegions(),
+         'permissions'=> Auth::user()->getAllPermissions()->pluck('name')->toArray(),
+        ];
+    }
 
     public function store(array $data)
     {
