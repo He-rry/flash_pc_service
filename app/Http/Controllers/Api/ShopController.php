@@ -18,28 +18,27 @@ class ShopController extends Controller
         $this->service = $service;
     }
     public function index(Request $request)
-{
-    // 1. Filter လုပ်ထားတဲ့ Query ကို အရင်ယူမယ်
-    $query = Shop::with('admin')->applyFilters($request->all())->latest();
-    $allFiltered = (clone $query)->get(); 
-    $paginated = $query->paginate(10);
+    {
+        $query = Shop::with('admin')->applyFilters($request->all())->latest();
+        $allFiltered = (clone $query)->get();
+        $paginated = $query->paginate(10);
 
-    $user = Auth::user();
-    $permissions = [
-        'can_view_logs' => $user ? $user->can('view-logs') : false,
-        'can_edit_shop' => $user ? $user->can('shop-edit') : false,
-        'can_delete_shop' => $user ? $user->can('shop-delete') : false,
-    ];
+        $user = Auth::user();
+        $permissions = [
+            'can_view_logs' => $user ? $user->can('view-logs') : false,
+            'can_edit_shop' => $user ? $user->can('shop-edit') : false,
+            'can_delete_shop' => $user ? $user->can('shop-delete') : false,
+        ];
 
-    return response()->json([
-        'data' => $paginated->items(),          // Table အတွက် (၁၀ ခု)
-        'all_filtered' => $allFiltered,         // Map အတွက် (၄၀ လုံး)
-        'total' => $paginated->total(),
-        'last_page' => $paginated->lastPage(),
-        'links' => $paginated->linkCollection(),
-        'user_permissions' => $permissions
-    ]);
-}
+        return response()->json([
+            'data' => $paginated->items(),
+            'all_filtered' => $allFiltered,
+            'total' => $paginated->total(),
+            'last_page' => $paginated->lastPage(),
+            'links' => $paginated->linkCollection(),
+            'user_permissions' => $permissions
+        ]);
+    }
 
     public function store(StoreShopRequest $request)
     {
@@ -59,7 +58,7 @@ class ShopController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Deleted successfully']);
     }
 
-    public function show($id) // logs အတွက် show method ကို သုံးခြင်း သို့မဟုတ် သီးသန့် logs method
+    public function show($id) 
     {
         $logs = $this->service->getShopLogs($id);
         return response()->json($logs);
