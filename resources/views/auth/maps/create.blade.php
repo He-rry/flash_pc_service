@@ -29,86 +29,74 @@
                 <form action="{{ route('admin.shops.store') }}" method="POST" class="mb-4">
                     @csrf
                     <div class="row align-items-start">
-                        <div class="col-md-4 px-1 mb-2">
-                            <label class="small font-weight-bold text-muted ml-1 uppercase">Shop Name</label>
-                            <input type="text" name="name" value="{{ old('name') }}"
-                                class="form-control form-control-sm @error('name') is-invalid @enderror"
-                                placeholder="Enter name">
-                            @error('name')
-                            <div class="invalid-feedback font-weight-bold" style="font-size: 11px;">{{ $message }}</div>
-                            @enderror
+                        <div class="col-md-4 px-1">
+                            <x-form-input name="name" label="Shop Name" placeholder="Enter name" required />
                         </div>
-
-                        <div class="col-md-2 px-1 mb-2">
-                            <label class="small font-weight-bold text-muted ml-1 uppercase">Latitude</label>
-                            <input type="number" step="any" name="lat" id="form_lat" value="{{ old('lat') }}"
-                                class="form-control form-control-sm @error('lat') is-invalid @enderror"
-                                placeholder="16.8...">
-                            @error('lat')
-                            <div class="invalid-feedback font-weight-bold" style="font-size: 11px;">{{ $message }}</div>
-                            @enderror
+                        <div class="col-md-2 px-1">
+                            <x-form-input
+                                name="lat"
+                                id="form_lat"
+                                label="Latitude"
+                                type="number"
+                                step="any"
+                                placeholder="16.8..." />
                         </div>
-
-                        <div class="col-md-2 px-1 mb-2">
-                            <label class="small font-weight-bold text-muted ml-1 uppercase">Longitude</label>
-                            <input type="number" step="any" name="lng" id="form_lng" value="{{ old('lng') }}"
-                                class="form-control form-control-sm @error('lng') is-invalid @enderror"
-                                placeholder="96.1...">
-                            @error('lng')
-                            <div class="invalid-feedback font-weight-bold" style="font-size: 11px;">{{ $message }}</div>
-                            @enderror
+                        <div class="col-md-2 px-1">
+                            <x-form-input
+                                name="lng"
+                                id="form_lng"
+                                label="Longitude"
+                                type="number"
+                                step="any"
+                                placeholder="96.1..." />
                         </div>
-
-                        <div class="col-md-2 px-1 mb-2">
-                            <label class="small font-weight-bold text-muted ml-1 uppercase">Region</label>
-                            <input type="text" name="region" value="{{ old('region') }}"
-                                class="form-control form-control-sm" placeholder="Region">
+                        <div class="col-md-2 px-1">
+                            <x-form-input name="region" label="Region" placeholder="Region" />
                         </div>
                         <div class="col-md-2 px-1 mt-4">
-                            <button type="submit" class="btn btn-primary btn-sm btn-block font-weight-bold shadow-sm py-2">
-                                <i class="fas fa-plus mr-1"></i> ADD
-                            </button>
+                            <x-app-button type="submit" color="primary" size="sm" icon="fas fa-plus" class="btn-block font-weight-bold py-2">
+                                ADD
+                            </x-app-button>
                         </div>
-                        <div class="col-md-2 px-1 mb-2">
-                            <label class="small font-weight-bold text-muted ml-1 uppercase">Reg Date</label>
-                            <input type="date" name="created_at" value="{{ date('Y-m-d') }}"
-                                class="form-control form-control-sm">
+                        <div class="col-md-2 px-1">
+                            <x-form-input name="created_at" label="Reg Date" type="date" :value="date('Y-m-d')" />
                         </div>
                     </div>
                 </form>
                 @endcan
-
                 <hr class="my-4">
-                @can ('shop-import')
-                <form action="{{ route('admin.shops.import') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="row align-items-center">
-                        <div class="col-md-7 px-1">
+                <div class="row align-items-center">
+                    <div class="col-md-7 px-1">
+                        @can ('shop-import')
+                        <form action="{{ route('admin.shops.import') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                            @csrf
                             <div class="custom-file">
                                 <input type="file" name="file" class="custom-file-input" id="importFile" required>
                                 <label class="custom-file-label custom-file-label-sm small" for="importFile">Choose Excel/CSV</label>
                             </div>
-                        </div>
-                        <div class="col-md-2 px-1">
-                            <button type="submit" class="btn btn-dark btn-sm btn-block font-weight-bold shadow-sm">
-                                <i class="fas fa-upload mr-1"></i> IMPORT
-                            </button>
-                        </div>
-                        @endcan
-                        @can ('shop-export')
-                        <div class="col-md-3 px-1">
-                            <a href="{{ route('admin.shops.export') }}" id="exportBtn" class="btn btn-success btn-sm btn-block font-weight-bold shadow-sm">
-                                <i class="fas fa-file-excel mr-1"></i> EXPORT RESULT
-                            </a>
-                        </div>
+                            @endcan
+                    </div>
+                    <div class="col-md-2 px-1">
+                        @can ('shop-import')
+                        <x-app-button type="submit" color="dark" size="sm" icon="fas fa-upload"
+                            permission="shop-import"
+                            class="btn-block font-weight-bold">
+                            IMPORT
+                        </x-app-button>
+                        </form>
                         @endcan
                     </div>
-                </form>
+                    <div class="col-md-3 px-1">
+                        @can ('shop-export')
+                        <x-app-button :href="route('admin.shops.export')" id="exportBtn" color="success" size="sm" icon="fas fa-file-excel" class="btn-block font-weight-bold">
+                            EXPORT RESULT
+                        </x-app-button>
+                        @endcan
+                    </div>
+                </div>
             </div>
         </div>
         @endcan
-
-        
         <div class="col-lg-4">
             @can('view-filters')
             <div class="custom-card p-4 h-100">
@@ -118,55 +106,60 @@
                         {{ $shops->total() }} Shops
                     </span>
                 </div>
-
                 <form id="filterForm" onsubmit="return false;">
                     <div class="mb-3">
-                        <input type="text" id="mapSearch" class="form-control form-control-sm mb-2" placeholder="Search by shop name...">
-                        <select id="regionFilter" class="form-control form-control-sm">
+                        {{-- Search Input --}}
+                        <x-form-input
+                            name="search"
+                            id="mapSearch"
+                            placeholder="Search by shop name..."
+                            class="mb-2" />
+
+                        {{-- Region Select --}}
+                        <x-form-select name="region" id="regionFilter">
                             <option value="">All Regions</option>
                             @foreach($regions as $reg)
                             <option value="{{ $reg }}">{{ $reg }}</option>
                             @endforeach
-                        </select>
-                    </div>
-
-                    <label class="small font-weight-bold text-muted mb-2 d-block">TIME PERIOD</label>
-                    <div class="btn-group btn-group-toggle d-flex" data-toggle="buttons">
-                        <label class="btn btn-outline-primary btn-sm active flex-fill">
-                            <input type="radio" name="period" value="all" checked> All
-                        </label>
-                        <label class="btn btn-outline-primary btn-sm flex-fill">
-                            <input type="radio" name="period" value="3"> 3M
-                        </label>
-                        <label class="btn btn-outline-primary btn-sm flex-fill">
-                            <input type="radio" name="period" value="6"> 6M
-                        </label>
-                        <label class="btn btn-outline-primary btn-sm flex-fill">
-                            <input type="radio" name="period" value="12"> 1Y
-                        </label>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="small font-weight-bold text-muted">From Date</label>
-                            <input type="date" name="from_date" id="from_date" class="form-control form-control-sm">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="small font-weight-bold text-muted">To Date</label>
-                            <input type="date" name="to_date" id="to_date" class="form-control form-control-sm">
+                        </x-form-select>
+                        <x-form-radio-group
+                            name="period"
+                            label="Time Period"
+                            :selected="'all'"
+                            :options="[
+                                 'all' => 'All',
+                                  '3'   => '3M',
+                                  '6'   => '6M',
+                                 '12'  => '1Y',
+                                 '24'  => '2Y',
+                         ]" />
+                        <div class="row">
+                            <div class="col-md-6 px-1">
+                                <x-form-input
+                                    name="from_date"
+                                    id="from_date"
+                                    label="From Date"
+                                    type="date" />
+                            </div>
+                            <div class="col-md-6 px-1">
+                                <x-form-input
+                                    name="to_date"
+                                    id="to_date"
+                                    label="To Date"
+                                    type="date" />
+                            </div>
                         </div>
                     </div>
                 </form>
                 <div class="mt-3">
-                    <button type="button" id="searchBtn" class="btn btn-primary btn-sm btn-block font-weight-bold shadow-sm">
-                        <i class="fas fa-search mr-1"></i> APPLY & SEARCH
-                    </button>
+                    <x-app-button id="searchBtn" color="primary" size="sm" icon="fas fa-search" class="btn-block font-weight-bold">
+                        APPLY & SEARCH
+                    </x-app-button>
                 </div>
             </div>
             @endcan
         </div>
-     
     </div>
-</div>
 </div>
 
 <div class="custom-card p-3 shadow-sm mt-3">
@@ -175,119 +168,112 @@
 
 <div class="custom-card overflow-hidden shadow-sm mt-3">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h6 class="section-title mb-0">
-            <i class="fas fa-store mr-2 text-primary"></i>Shop Directory
-        </h6>
+        <h6 class="section-title mb-0"><i class="fas fa-store mr-2 text-primary"></i>Shop Directory</h6>
 
-        @can('view-logs')
-        <a href="{{ route('admin.logs.index') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
-            <i class="fas fa-history mr-1"></i> View Activity Logs
-        </a>
-        @endcan
+        {{-- ၅။ Activity Logs Button (Link with Permission) --}}
+        <x-app-button :href="route('admin.logs.index')" permission="view-logs" color="primary" :outline="true" size="sm" icon="fas fa-history" class="rounded-pill px-3">
+            View Activity Logs
+        </x-app-button>
     </div>
-    <div class="table-container">
-        <table class="table table-hover mb-0">
-            <thead>
-                <tr>
-                    <th class="pl-4">Shop Name</th>
-                    <th>Coordinates</th>
-                    <th class="text-center">Region</th>
-                    @can('view-logs')
-                    <th class="text-center">Added By</th>
+
+    @php
+    //Header
+    $rawHeaders = [
+    'Shop Name' => '25%',
+    'Coordinates' => '20%',
+    'Region' => ['width' => '15%', 'align' => 'text-center'],
+    'Added By' => ['width' => '15%', 'align' => 'text-center', 'permission' => 'view-logs'],
+    'Registered At' => ['width' => '15%', 'align' => 'text-right'],
+    'Actions' => ['width' => '15%', 'align' => 'text-right', 'canany' => ['shop-edit', 'view-logs']]
+    ];
+    @endphp
+    <div class="dashboard-container">
+        <x-app-table id="shopTable" :items="$shops" :headers="$rawHeaders">
+            @slot('default')
+            @foreach($shops as $shop)
+            <tr class="align-middle">
+                {{-- Shop Name Column --}}
+                <td class="py-3 px-4 font-weight-bold">
+                    @can('shop-edit')
+                    <x-app-button color="link" class="p-0 text-dark text-decoration-none" :onclick="'openEditModal(' . json_encode($shop) . ')'">
+                        {{ $shop->name }}
+                    </x-app-button>
+                    @else
+                    {{ $shop->name }}
                     @endcan
-                    <th class="text-right">Registered At</th>
-                    @canany(['shop-edit', 'view-logs'])
-                    <th class="text-right pr-4">Actions</th>
-                    @endcanany
-                </tr>
-            </thead>
-            <tbody id="shopTableBody">
-                @foreach($shops as $shop)
-                <tr>
-                    {{-- Name --}}
-                    <td class="pl-4">
-                        @can('shop-edit')
-                        <a href="javascript:void(0)" class="text-dark font-weight-bold text-decoration-none"
-                            onclick='openEditModal(@json($shop))'>
-                            {{ $shop->name }}
-                        </a>
-                        @else
-                        <strong>{{ $shop->name }}</strong>
-                        @endcan
-                    </td>
+                </td>
 
-                    {{-- Coordinates --}}
-                    <td>
-                        <span class="text-monospace small bg-light px-2 py-1 rounded">
-                            {{ number_format($shop->lat, 5) }}, {{ number_format($shop->lng, 5) }}
-                        </span>
-                    </td>
+                {{-- Coordinates Column --}}
+                <td class="py-3 px-4 small text-monospace text-muted">
+                    <i class="fas fa-map-marker-alt mr-1 text-danger opacity-75"></i>
+                    {{ number_format($shop->lat, 4) }}, {{ number_format($shop->lng, 4) }}
+                </td>
 
-                    {{-- Region --}}
-                    <td class="text-center">
-                        <span class="badge badge-light border">{{ $shop->region ?? '-' }}</span>
-                    </td>
+                {{-- Region Column --}}
+                <td class="py-3 px-4 text-center">
+                    <span class="badge badge-light border text-dark font-weight-normal px-2 py-1">
+                        {{ $shop->region }}
+                    </span>
+                </td>
 
-                    {{-- Added By --}}
-                    @can('view-logs')
-                    <td class="text-center">
-                        <span class="badge badge-info-soft text-info px-2 py-1" style="background-color: #e0f2ff;">
-                            <i class="fas fa-user-check mr-1 small"></i>{{ $shop->admin->name ?? 'System' }}
-                        </span>
-                    </td>
-                    @endcan
+                {{-- Added By Column (Permission Check) --}}
+                @if(isset($activeHeaders['Added By']))
+                <td class="py-3 px-4 text-center text-muted small">
+                    <div class="d-flex align-items-center justify-content-center">
+                        <i class="fas fa-user-circle mr-1 opacity-50"></i>
+                        {{ $shop->admin->name ?? 'System' }}
+                    </div>
+                </td>
+                @endif
 
-                    {{-- Registered Date --}}
-                    <td class="text-right small text-muted">
-                        {{ $shop->created_at->format('d/m/Y') }}
-                    </td>
+                {{-- Registered At Column --}}
+                <td class="py-3 px-4 text-right text-muted small">
+                    {{ $shop->created_at->format('d/m/Y') }}
+                </td>
 
-                    {{-- Actions Buttons --}}
-                    @canany(['shop-edit', 'view-logs'])
-                    <td class="text-right pr-4">
-                        @can('shop-edit')
-                        <button class="btn btn-sm btn-light shadow-sm border mr-1"
-                            onclick='openEditModal(@json($shop))'>
-                            <i class="fas fa-edit text-warning"></i>
-                        </button>
-                        @endcan
-
-                        @can('view-logs')
-                        <button class="btn btn-sm btn-light shadow-sm border"
-                            onclick="showShopLogs({{$shop->id}}, '{{ addslashes($shop->name) }}')">
-                            <i class="fas fa-history text-info"></i>
-                        </button>
-                        @endcan
-                    </td>
-                    @endcanany
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+                {{-- Actions Column (Permission Check) --}}
+                @if(isset($activeHeaders['Actions']))
+                <td>
+                    <div class="btn-action-group">
+                        <x-app-button
+                            color="light" size="sm"
+                            icon="fas fa-edit text-warning"
+                            permission="shop-edit"
+                            title="Edit Shop"
+                            :onclick="'openEditModal(' . json_encode($shop) . ')'" />
+                        <x-app-button
+                            color="light" size="sm"
+                            icon="fas fa-history text-info"
+                            permission="view-logs"
+                            title="View Logs"
+                            :onclick="'viewLog(' . $shop->id . ')'" />
+                    </div>
+                </td>
+                @endif
+            </tr>
+            @endforeach
+            @endslot
+        </x-app-table>
     </div>
-    <div id="paginationContainer" class="card-footer bg-light py-3 d-flex justify-content-center">
-        {{ $shops->links('pagination::bootstrap-4') }}
-    </div>
-</div>
-@include('auth.maps.partials.update_delete_modal')
-@include('auth.maps.partials.import_modal')
-@include('auth.logs.shopslog')
+    @include('auth.maps.partials.update_delete_modal')
+    @include('auth.maps.partials.import_modal')
+    @include('auth.logs.shopslog')
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    window.appConfig = {
-        apiUrl: "{{ url('/api/v1/shops') }}",
-        exportUrl: "{{ route('admin.shops.export') }}",
-        permissions: @json(auth()->user()->getAllPermissions()->pluck('name')),
-    };
-</script>
-@if(session('warning'))
-<script>
-    $(document).ready(function() {
-        $('#reportModal').modal('show');
-    });
-</script>
-@endif
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="{{ asset('js/shop-map.js') }}"></script>
-@endsection
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        window.appConfig = {
+            apiUrl: "{{ url('/api/v1/shops') }}",
+            exportUrl: "{{ route('admin.shops.export') }}",
+            permissions: @json(auth()-> user()-> getAllPermissions()-> pluck('name')),
+        };
+    </script>
+    @if(session('warning'))
+    <script>
+        $(document).ready(function() {
+            $('#reportModal').modal('show');
+        });
+    </script>
+    @endif
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="{{ asset('js/shop-map.js') }}"></script>
+    @endsection
