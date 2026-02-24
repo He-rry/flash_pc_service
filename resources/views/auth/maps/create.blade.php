@@ -264,7 +264,7 @@
         window.appConfig = {
             apiUrl: "{{ url('/api/v1/shops') }}",
             exportUrl: "{{ route('admin.shops.export') }}",
-            permissions: @json(auth()-> user()-> getAllPermissions()-> pluck('name')),
+            permissions: @json(auth()->user()->getAllPermissions()->pluck('name')),
         };
     </script>
     @if(session('warning'))

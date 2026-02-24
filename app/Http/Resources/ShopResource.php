@@ -21,8 +21,8 @@ class ShopResource extends JsonResource
             'lng'        => $this->lng,
             'address'    => $this->address,
             'region'     => $this->region,
-            'added_by'   => $this->admin->name ?? 'System', //
-            'waypoints'  => $this->waypoints, //
+            'added_by'   => $this->admin->name ?? 'System',
+            'waypoints'  => $this->waypoints, 
             'created_at' => $this->created_at->toDateTimeString(),
         ];
     }

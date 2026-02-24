@@ -53,8 +53,6 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('email', $request->email)->first();
-
-        // User ရှိမရှိနဲ့ Password မှန်မမှန်စစ်ခြင်း
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
                 'status' => 'error',
@@ -62,7 +60,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Sanctum Token ထုတ်ပေးခြင်း (device_name ကို ယာယီ 'postman-token' ဟု ပေးထားပါသည်)
+        // Sanctum Token
         $token = $user->createToken('api-token')->plainTextToken;
 
         return response()->json([
@@ -76,7 +74,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // API Logout (ယာယီ)
+    // API Logout
     public function apiLogout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();

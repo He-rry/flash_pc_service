@@ -35,82 +35,97 @@
 
 @section('content')
 <div class="container py-4">
-    <div class="card shadow border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0"><i class="fas fa-list mr-2"></i> Saved Routes</h5>
-            <a href="{{ route('admin.maps.index') }}" class="btn btn-sm btn-light">
-                <i class="fas fa-arrow-left mr-1"></i> Back to Planner
-            </a>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover border">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Route Name</th>
-                            <th style="width: 150px;">Distance</th>
-                            <th style="width: 150px;">Stops</th>
-                            <th>Date Created</th>
-                            <th class="text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($routes as $route)
-                        <tr>
-                            <td>
-                                <strong class="text-dark">{{ $route->route_name }}</strong>
-                            </td>
-                            <td>
-                                <span class="badge-custom badge-dist">
-                                    <i class="fas fa-road mr-1"></i> {{ $route->distance ?? '0 km' }}
-                                </span>
-                            </td>
-                            <td>
-                                @php
-                                $waypoints = is_array($route->waypoints) ? $route->waypoints : json_decode($route->waypoints, true);
-                                $stopCount = is_array($waypoints) ? count($waypoints) : 0;
-                                @endphp
-                                <span class="badge-custom badge-shops">
-                                    <i class="fas fa-store mr-1"></i> {{ $stopCount }} {{ $stopCount <= 1 ? 'Shop' : 'Shops' }}
-                                </span>
-                            </td>
-                            <td>
-                                <div class="text-muted small">
-                                    <i class="far fa-calendar-alt mr-1"></i> {{ $route->created_at->format('d M Y') }}
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                <div class="btn-group">
-                                    <a href="{{ route('admin.maps.show', $route->id) }}" class="btn btn-sm btn-info text-white">
-                                        <i class="fas fa-eye"></i> View
-                                    </a>
-                                    @can('manage-routes')
-                                    <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete({{ $route->id }})">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                    <form id="delete-form-{{ $route->id }}" action="{{ route('admin.maps.destroy', $route->id) }}" method="POST" style="display: none;">
-                                        @csrf @method('DELETE')
-                                    </form>
-                                    @endcan
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                No saved routes found. <a href="{{ route('admin.maps.index') }}">Create one now.</a>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-
-            @if(method_exists($routes, 'hasPages') && $routes->hasPages())
-            <div class="mt-3">{{ $routes->links() }}</div>
-            @endif
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="mb-0 text-primary font-weight-bold">
+            <i class="fas fa-map-marked-alt mr-2"></i>Saved Routes
+        </h4>
+        <x-app-button href="{{ route('admin.maps.index') }}" color="primary" icon="fas fa-plus">
+            Create New Route
+        </x-app-button>
     </div>
+
+    @php
+    $tableHeaders = [
+    'Route Name' => '35%',
+    'Distance' => '15%',
+    'Stops' => '15%',
+    'Date Created' => '20%',
+    'Action' => ['width' => '15%', 'align' => 'text-center']
+    ];
+    @endphp
+
+    <x-app-table :headers="$tableHeaders" :items="$routes">
+        @forelse($routes as $route)
+        <tr class="align-middle">
+            {{-- Route Name --}}
+            <td class="py-3 px-4">
+                <strong class="text-dark d-block">{{ $route->route_name }}</strong>
+            </td>
+
+            {{-- Distance --}}
+            <td>
+                <span class="badge rounded-pill bg-light text-primary border px-3 py-2 small">
+                    <i class="fas fa-road me-1"></i> {{ $route->distance ?? '0 km' }}
+                </span>
+            </td>
+
+            {{-- Stops (Waypoints) --}}
+            <td>
+                @php
+                $waypoints = is_array($route->waypoints) ? $route->waypoints : json_decode($route->waypoints, true);
+                $stopCount = is_array($waypoints) ? count($waypoints) : 0;
+                @endphp
+                <span class="badge rounded-pill bg-light text-success border px-3 py-2 small">
+                    <i class="fas fa-store me-1"></i> {{ $stopCount }} {{ Str::plural('Shop', $stopCount) }}
+                </span>
+            </td>
+
+            {{-- Date Created --}}
+            <td>
+                <div class="text-muted small">
+                    <i class="far fa-calendar-alt me-1"></i> {{ $route->created_at->format('d M Y') }}
+                </div>
+            </td>
+
+            {{-- Action Buttons --}}
+            <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                    {{-- View Button --}}
+                    <x-app-button
+                        href="{{ route('admin.maps.show', $route->id) }}"
+                        color="info"
+                        size="sm"
+                        class="text-white"
+                        icon="fas fa-eye">
+                        View
+                    </x-app-button>
+
+                    {{-- Delete Button --}}
+                    @can('manage-routes')
+                    <form action="{{ route('admin.maps.destroy', $route->id) }}" method="POST"
+                        onsubmit="return confirm('Are you sure you want to delete this route?')">
+                        @csrf
+                        @method('DELETE')
+                        <x-app-button type="submit" color="danger" size="sm" icon="fas fa-trash">
+                            Delete
+                        </x-app-button>
+                    </form>
+                    @endcan
+                </div>
+            </td>
+        </tr>
+        @empty
+        <tr>
+            <td colspan="5" class="text-center py-5">
+                <div class="text-muted">
+                    <i class="fas fa-route fa-3x mb-3 opacity-25"></i>
+                    <p class="mb-0">No saved routes found.</p>
+                    <a href="{{ route('admin.maps.index') }}" class="small text-primary fw-bold">Create one now.</a>
+                </div>
+            </td>
+        </tr>
+        @endforelse
+    </x-app-table>
 </div>
 @endsection
 
