@@ -13,7 +13,7 @@ class ActivityLogResource extends JsonResource
             'action' => $this->action,
             'module' => $this->module,
             'description' => $this->description,
-            'changes' => $this->changes, // cast လုပ်ထားပြီးသား array အတိုင်းထွက်လာမည်
+            'changes' => $this->changes, // casted array
             'user' => [
                 'id' => $this->user->id ?? null,
                 'name' => $this->user->name ?? 'System',
