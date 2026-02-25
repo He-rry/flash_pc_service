@@ -32,7 +32,7 @@ $rawHeaders = [
         <td class="py-3 px-4 font-weight-bold text-dark">{{ $service->customer_name }}</td>
         <td class="py-3 px-4 text-secondary">{{ $service->pc_model }}</td>
         <td class="py-3 px-4 text-center">
-            <span class="badge {{ $service->status->status_name == 'Finish' ? 'bg-success' : 'bg-info' }} rounded-pill px-3">
+            <span class="badge {{ $service->status->status_name == 'Finished' ? 'bg-success' : 'bg-info' }} rounded-pill px-3">
                 {{ $service->status->status_name }}
             </span>
         </td>
@@ -49,21 +49,21 @@ $rawHeaders = [
                     textStyle="text-info">
                     View
                 </x-app-button>
-
                 <x-app-button permission="edit-services" color="light" size="sm" icon="fas fa-edit text-warning"
                     href="{{ route('admin.services.edit', $service->id) }}"
                     textStyle="text-warning">
                     Edit
                 </x-app-button>
-
-
-                <x-app-button permission="delete-services" color="light" size="sm" icon="fas fa-trash text-danger"
-                    textStyle="text-danger">
+                <x-app-button
+                    method="DELETE"
+                    href="{{ route('admin.services.destroy', $service->id) }}"
+                    confirm="Are you sure you want to delete this?"
+                    color="light" size="sm" icon="fas fa-trash text-danger" textStyle="text-danger">
                     Delete
                 </x-app-button>
             </div>
+            @endif
         </td>
-        @endif
     </tr>
 
     {{-- Modal – remains unchanged --}}

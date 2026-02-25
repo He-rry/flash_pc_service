@@ -36,7 +36,7 @@
                             name="password"
                             label="Password"
                             type="password"
-                            placeholder="••••••••"
+                            placeholder="*****.."
                             :required="true" />
                         {{-- Submit Button --}}
                         <x-app-button type="submit" color="primary" class="w-100 py-2 shadow-sm">

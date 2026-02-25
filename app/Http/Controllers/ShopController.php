@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Repositories\ShopRepository;
 use App\Services\ShopService;
 use App\Http\Requests\StoreShopRequest;
 use Illuminate\Http\Request;
@@ -13,11 +12,9 @@ class ShopController extends Controller
     protected $service;
     protected $repo;
 
-    public function __construct(ShopService $service, ShopRepository $repo)
+    public function __construct(ShopService $service)
     {
         $this->service = $service;
-        $this->repo = $repo;
-
         $this->middleware('permission:view-shop-management')->only(['create', 'store', 'update', 'import', 'export', 'downloadDuplicates']);
         $this->middleware('permission:delete-shops')->only(['destroy']);
         $this->middleware('permission:view-logs')->only(['getLogs']);

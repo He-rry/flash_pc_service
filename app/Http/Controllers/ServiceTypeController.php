@@ -22,7 +22,6 @@ class ServiceTypeController extends Controller
         $types = $this->service->list();
         return view('service_types.index', compact('types'));
     }
-
     public function create()
     {
         Gate::authorize('manage-services');
