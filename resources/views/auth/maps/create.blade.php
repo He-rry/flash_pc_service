@@ -131,7 +131,6 @@
                                   '3'   => '3M',
                                   '6'   => '6M',
                                  '12'  => '1Y',
-                                 '24'  => '2Y',
                          ]" />
                         <div class="row">
                             <div class="col-md-6 px-1">
@@ -202,20 +201,17 @@
                     {{ $shop->name }}
                     @endcan
                 </td>
-
                 {{-- Coordinates Column --}}
                 <td class="py-3 px-4 small text-monospace text-muted">
                     <i class="fas fa-map-marker-alt mr-1 text-danger opacity-75"></i>
                     {{ number_format($shop->lat, 4) }}, {{ number_format($shop->lng, 4) }}
                 </td>
-
                 {{-- Region Column --}}
                 <td class="py-3 px-4 text-center">
                     <span class="badge badge-light border text-dark font-weight-normal px-2 py-1">
                         {{ $shop->region }}
                     </span>
                 </td>
-
                 {{-- Added By Column (Permission Check) --}}
                 @if(isset($activeHeaders['Added By']))
                 <td class="py-3 px-4 text-center text-muted small">
@@ -225,12 +221,10 @@
                     </div>
                 </td>
                 @endif
-
                 {{-- Registered At Column --}}
                 <td class="py-3 px-4 text-right text-muted small">
                     {{ $shop->created_at->format('d/m/Y') }}
                 </td>
-
                 {{-- Actions Column (Permission Check) --}}
                 @if(isset($activeHeaders['Actions']))
                 <td>

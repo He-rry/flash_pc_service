@@ -30,4 +30,16 @@ class ActivityLog extends Model
     {
         return $this->belongsTo(Shop::class);
     }
+    public function services()
+    {
+        return $this->belongsTo(Service::class);
+    }
+    public function status()
+    {
+        return $this->belongsTo(Status::class);
+    }
+    public function serviceType()
+    {
+        return $this->belongsTo(ServiceType::class);
+    }
 }

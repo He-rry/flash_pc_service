@@ -133,12 +133,6 @@
             </tr>
             @endforelse
         </x-app-table>
-        {{-- Pagination Footer --}}
-        <div class="card-footer bg-white py-3 border-top">
-            <div class="d-flex justify-content-center">
-                {{ $logs->appends(request()->query())->links('pagination::bootstrap-5') }}
-            </div>
-        </div>
     </div>
 </div>
 

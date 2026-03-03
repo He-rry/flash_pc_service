@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Events\ActivityLogged;
 use App\Models\User;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Event;
+use App\Listeners\RecordActivityLog;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,5 +26,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::before(function ($user, $ability) {
             return $user->hasRole('super-admin') ? true : null;
         });
+        // Event::listen(
+        //     ActivityLogged::class,
+        //     RecordActivityLog::class
+        // );
     }
 }

@@ -11,7 +11,7 @@ class RoutePlannerController extends Controller
     public function __construct(RoutePlannerService $service)
     {
         $this->service = $service;
-    }
+    } 
 
     public function index()
     {

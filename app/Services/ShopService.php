@@ -44,7 +44,6 @@ class ShopService
         }
 
         $shop = $this->repo->createShop($data);
-        $this->logActivity('ADD', "Added new shop: " . $shop->name, $shop->id);
         return $shop;
     }
 
@@ -59,8 +58,6 @@ class ShopService
         $description = count($changes) > 0
             ? "Updated fields: " . implode(', ', $changes)
             : "Updated shop details (No fields changed)";
-
-        $this->logActivity('UPDATE', $description, $id);
         return $updatedShop;
     }
 
@@ -70,7 +67,6 @@ class ShopService
         if (!$shop) throw new \Exception('ဆိုင်ကို ရှာမတွေ့ပါ။');
 
         $name = $shop->name;
-        $this->logActivity('DELETE', "Deleted shop: $name (ID: $id)", $id);
         $this->repo->deleteShop($id);
         return true;
     }
@@ -79,13 +75,11 @@ class ShopService
     {
         $import = new ShopsImport($action, Auth::id());
         Excel::import($import, $file);
-        $this->logActivity('IMPORT', "Imported shops from Excel (Action: $action)");
         return ['duplicates' => $import->duplicateRows];
     }
 
     public function exportShops(array $filters)
     {
-        $this->logActivity('EXPORT', "Exported shop list to Excel");
         return Excel::download(new ShopsExport($filters), 'shops_report.xlsx');
     }
 
@@ -93,7 +87,6 @@ class ShopService
     public function exportDuplicates($duplicates)
     {
         Gate::authorize('manage-shops');
-        $this->logActivity('EXPORT', "Exported duplicate shops list");
         return Excel::download(new DuplicateShopsExport($duplicates, 'yellow'), 'duplicates.xlsx');
     }
 

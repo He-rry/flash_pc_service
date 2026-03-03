@@ -40,7 +40,6 @@ class ShopController extends Controller
             return back()->withErrors(['lat' => $e->getMessage()])->withInput();
         }
     }
-
     public function update(Request $request, $id)
     {
         try {

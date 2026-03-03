@@ -15,7 +15,6 @@ class ActivityLogController extends Controller
         if ($request->has('shop_id') && $request->shop_id != '') {
             $query->where('shop_id', $request->shop_id);
         }
-
         $logs = $query->latest()->paginate(15);
         return view('auth.logs.index', compact('logs'));
     }
