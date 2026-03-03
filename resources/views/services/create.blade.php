@@ -6,7 +6,7 @@
         <h4>Add New PC Service Task</h4>
     </div>
     <div class="card-body">
-        <form action="{{ route('admin.shops.store') }}" method="POST">
+        <form action="{{ route('admin.services.store') }}" method="POST">
             @csrf
             <div class="row">
                 <div class="col-md-6 mb-3">

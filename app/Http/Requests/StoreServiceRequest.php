@@ -21,6 +21,7 @@ class StoreServiceRequest extends FormRequest
             'service_type_id' => 'required|exists:service_types,id',
             'lat' => 'nullable|numeric',
             'long' => 'nullable|numeric',
+            'pc_model' => 'nullable|string|max:100'
         ];
     }
 }

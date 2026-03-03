@@ -31,6 +31,7 @@ class ServiceController extends Controller
 
     public function store(StoreServiceRequest $request)
     {
+        // dd($request->validated());
         Gate::authorize('manage-services');
         $this->service->createReport($request->validated());
         return redirect()->route('admin.services.index')->with('success', 'Service created successfully!');

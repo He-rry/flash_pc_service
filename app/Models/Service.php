@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    use HasFactory , TraitsLogsActivity;
+    use HasFactory ,TraitsLogsActivity;
     protected $fillable = [
         'customer_name',
         'customer_phone',

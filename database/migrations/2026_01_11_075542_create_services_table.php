@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('customer_address');
             $table->string('lat')->nullable();
             $table->string('long')->nullable();
-            $table->string('pc_model')->nullable();
+            $table->string('pc_model');
             $table->text('issue_description')->nullable();
             // Relationships 
             $table->foreignId('status_id')->constrained('statuses');

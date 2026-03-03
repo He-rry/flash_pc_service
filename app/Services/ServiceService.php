@@ -23,8 +23,19 @@ class ServiceService
     public function createReport(array $data)
     {
         $status = $this->getDefaultStatus();
+
+        // Debug ၁: Status ရှိမရှိအရင်စစ်ပါ
+        if (!$status) {
+            dd('Default status record database ထဲမှာ မရှိသေးပါဘူး။');
+        }
+
         $data['status_id'] = $status->id;
-        return $this->serviceRepo->storeService($data);
+
+        // Debug ၂: Repo ထဲမသွင်းခင် Data ကို စစ်ပါ
+        // dd($data); 
+
+        $services = $this->serviceRepo->storeService($data);
+        // dd($services);
     }
 
     public function getServiceList()

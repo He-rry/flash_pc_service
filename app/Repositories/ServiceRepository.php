@@ -7,36 +7,50 @@ use App\Models\Service;
 use App\Models\Status;
 use App\Models\ServiceType;
 
-class ServiceRepository implements ServiceInterface {
-    
-    public function getAllServices() {
+class ServiceRepository implements ServiceInterface
+{
+
+    public function __construct(protected Service $model) {}
+    public function getAllServices()
+    {
         return Service::with(['status', 'serviceType'])->latest()->paginate(10);
     }
 
-    public function findById($id) {
+    public function findById($id)
+    {
         return Service::findOrFail($id);
     }
 
-    public function storeService(array $data) {
-        return Service::create($data);
+    public function storeService(array $data)
+    {
+        return $this->model->create($data);
     }
 
-    public function updateService($id, array $data) {
+    public function updateService($id, array $data)
+    {
         $service = Service::findOrFail($id);
         $service->update($data);
         return $service;
     }
 
-    public function deleteService($id) {
+    public function deleteService($id)
+    {
         $service = Service::findOrFail($id);
         return $service->delete();
     }
 
-    public function findByPhone($phone) {
+    public function findByPhone($phone)
+    {
         return Service::where('customer_phone', $phone)->with('status')->latest()->first();
     }
 
     // Status and Type
-    public function getAllStatuses() { return Status::all(); }
-    public function getAllServiceTypes() { return ServiceType::all(); }
+    public function getAllStatuses()
+    {
+        return Status::all();
+    }
+    public function getAllServiceTypes()
+    {
+        return ServiceType::all();
+    }
 }

@@ -102,16 +102,16 @@ class ShopService
         return $changes;
     }
 
-    private function logActivity($action, $description, $shopId = null)
-    {
-        ActivityLog::create([
-            'user_id'     => Auth::id(),
-            'shop_id'     => $shopId,
-            'action'      => $action,
-            'module'      => 'SHOPS',
-            'description' => $description,
-        ]);
-    }
+    // private function logActivity($action, $description, $shopId = null)
+    // {
+    //     ActivityLog::create([
+    //         'user_id'     => Auth::id(),
+    //         'shop_id'     => $shopId,
+    //         'action'      => $action,
+    //         'module'      => 'SHOPS',
+    //         'description' => $description,
+    //     ]);
+    // }
     public function getShopLogs($id)
     {
         Gate::authorize('view-logs');
